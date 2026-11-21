@@ -1,0 +1,16 @@
+ALTER TABLE orders
+  ADD COLUMN IF NOT EXISTS customer_name TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS customer_email TEXT,
+  ADD COLUMN IF NOT EXISTS delivery_address JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS billing_address JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS billing_same_as_delivery BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS subtotal NUMERIC(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total NUMERIC(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS coupon_code TEXT,
+  ADD COLUMN IF NOT EXISTS receipt_token_hash TEXT,
+  ADD COLUMN IF NOT EXISTS receipt_expires_at TIMESTAMPTZ;
+
+CREATE UNIQUE INDEX IF NOT EXISTS orders_receipt_token_hash_idx
+  ON orders(receipt_token_hash)
+  WHERE receipt_token_hash IS NOT NULL;
