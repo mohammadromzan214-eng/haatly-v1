@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     const profile = await verifyGoogleIdToken(tokenPayload.id_token, nonce, clientId);
     const user = await registerOrLoginGoogleCustomer(profile);
-    const sessionToken = await createCustomerSession(toSession(user));
+    const sessionToken = await createCustomerSession(toSession(user), user.sessionVersion);
     const response = NextResponse.redirect(new URL(destination, getCustomerAppOrigin(request.nextUrl.origin)));
     response.cookies.set(getCustomerSessionCookieName(), sessionToken, {
       httpOnly: true,

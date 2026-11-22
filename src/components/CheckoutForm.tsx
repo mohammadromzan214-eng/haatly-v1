@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, CircleAlert, LockKeyhole, MapPin, PackageCheck, UserRound } from "lucide-react";
 import { useCustomerAuth } from "@/components/CustomerAuthProvider";
-import type { AdminCoupon } from "@/components/admin/AdminDataProvider";
+import type { AdminCoupon, AdminSettings } from "@/components/admin/AdminDataProvider";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useCart } from "@/components/Providers";
 import { cdn } from "@/lib/image";
@@ -95,7 +95,15 @@ function AddressFields({
   );
 }
 
-export function CheckoutForm({ coupons, initialCoupon = "" }: { coupons: AdminCoupon[]; initialCoupon?: string }) {
+export function CheckoutForm({
+  coupons,
+  initialCoupon = "",
+  paymentNumbers,
+}: {
+  coupons: AdminCoupon[];
+  initialCoupon?: string;
+  paymentNumbers: Pick<AdminSettings, "bkashNumber" | "nagadNumber" | "phone">;
+}) {
   const router = useRouter();
   const { customer, addresses, ready: authReady } = useCustomerAuth();
   const { items, subtotal, ready: cartReady, clear } = useCart();
@@ -182,9 +190,14 @@ export function CheckoutForm({ coupons, initialCoupon = "" }: { coupons: AdminCo
     const count = new Set(items.map((item) => item.sellerId)).size;
     return count;
   }, [items]);
+  const configuredMethods = availableMethods.filter((method) => (
+    method === "cod"
+      || (method === "bkash" && paymentNumbers.bkashNumber.trim())
+      || (method === "nagad" && paymentNumbers.nagadNumber.trim())
+  ));
   const checkoutMethods = customer
-    ? availableMethods
-    : availableMethods.filter((method) => method === "cod");
+    ? configuredMethods
+    : configuredMethods.filter((method) => method === "cod");
   const checkoutMethodKey = checkoutMethods.join(",");
 
   useEffect(() => {
@@ -336,7 +349,18 @@ export function CheckoutForm({ coupons, initialCoupon = "" }: { coupons: AdminCo
                 <label key={method} className={`flex cursor-pointer items-start justify-between gap-3 rounded-2xl border-2 p-4 ${paymentMethod === method ? "border-forest bg-forest/5" : "border-line"}`}>
                   <span className="flex items-start gap-3">
                     <input type="radio" name="payment-method" value={method} checked={paymentMethod === method} onChange={() => setPaymentMethod(method)} className="mt-1 size-4 accent-forest" />
-                    <span><strong className="block">{PAYMENT_METHOD_LABEL[method]}</strong><span className="text-sm text-muted">{method === "cod" ? "Pay when your order arrives." : "Mock payment stays pending until verified."}</span></span>
+                    <span>
+                      <strong className="block">{PAYMENT_METHOD_LABEL[method]}</strong>
+                      <span className="text-sm text-muted">{method === "cod" ? "Pay when your order arrives." : "Manual mock payment; an admin must verify it."}</span>
+                      {paymentMethod === method && method !== "cod" && (
+                        <span className="mt-2 block rounded-xl bg-paper-2 px-3 py-2 text-sm">
+                          Manual number: <strong className="font-mono">{method === "bkash" ? paymentNumbers.bkashNumber : paymentNumbers.nagadNumber}</strong>
+                          <span className="mt-1 block text-xs text-muted">
+                            No live gateway is connected. After placing your order, contact support{paymentNumbers.phone ? ` at ${paymentNumbers.phone}` : ""} with your order and transaction IDs; payment stays pending until verified.
+                          </span>
+                        </span>
+                      )}
+                    </span>
                   </span>
                   {paymentMethod === method && <BadgeCheck className="size-5 shrink-0 text-forest" />}
                 </label>

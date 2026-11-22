@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Heart, MapPin, PackageCheck, UserRound } from "lucide-react";
 import { useCustomerAuth } from "@/components/CustomerAuthProvider";
 import { useCart } from "@/components/Providers";
-import { ORDER_FLOW, ORDER_STATUS_LABEL, type Order } from "@/lib/types";
+import { ORDER_STATUS_LABEL, orderProgressPercent, type Order } from "@/lib/types";
 
 export default function ProfilePage() {
   const { customer, addresses } = useCustomerAuth();
@@ -64,12 +64,12 @@ export default function ProfilePage() {
         </div>
         <div className="mt-4 space-y-3">
           {recentOrders.slice(0, 2).map((order) => {
-            const progress = (ORDER_FLOW.indexOf(order.status) + 1) / ORDER_FLOW.length;
+            const progress = orderProgressPercent(order);
             return (
               <Link key={order.code} href={`/profile/order/${order.code}`} className="block rounded-[24px] border border-line bg-paper p-5 transition hover:border-ink">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div><p className="font-mono text-xs text-muted">{order.code}</p><p className="mt-1 font-display text-lg font-bold">{order.lines.length} items · {order.shipTo.city}</p></div>
-                  <span className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">{ORDER_STATUS_LABEL[order.status]}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status === "cancelled" ? "bg-clay/10 text-clay" : "bg-forest/10 text-forest"}`}>{ORDER_STATUS_LABEL[order.status]}</span>
                 </div>
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-paper-2"><div className="h-full rounded-full bg-forest transition-all" style={{ width: `${progress * 100}%` }} /></div>
                 <p className="mt-2 text-xs text-muted">Delivery progress · {Math.round(progress * 100)}%</p>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCustomerSessionCookieName, verifyCustomerSession } from "@/lib/customer-auth";
+import { customerSessionUnavailableResponse, verifyActiveCustomerRequest } from "@/lib/customer-access";
 import { CheckoutError, createCheckoutOrder, type CheckoutAddress } from "@/lib/db/checkout-repository";
 import { initiateOrderPayment } from "@/lib/payments/service";
 import type { PaymentMethod } from "@/lib/types";
@@ -87,7 +87,9 @@ export async function POST(request: NextRequest) {
       return { productId: record.productId.trim(), quantity: record.quantity as number };
     });
 
-    const customer = await verifyCustomerSession(request.cookies.get(getCustomerSessionCookieName())?.value);
+    const customerCheck = await verifyActiveCustomerRequest(request);
+    if (customerCheck.status === "unavailable") return customerSessionUnavailableResponse();
+    const customer = customerCheck.status === "authenticated" ? customerCheck.customer : null;
     if (paymentMethod !== "cod" && !customer) {
       throw new CheckoutError("Sign in to use bKash or Nagad. Guest checkout remains available with Cash on Delivery.", 401);
     }

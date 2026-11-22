@@ -12,6 +12,8 @@ type SearchParams = Promise<{ q?: string; source?: string; sort?: string; catego
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
   const initial = await searchParams;
   const [products, categories] = await Promise.all([listStorefrontProducts(), listCategories()]);
+  const browserKey = `${initial.q ?? ""}|${initial.source ?? ""}|${initial.sort ?? ""}|${initial.category ?? ""}`;
+
   return (
     <main className="mx-auto max-w-7xl px-5 pb-10">
       <PageIntro
@@ -21,7 +23,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         crumbs={[{ href: "/", label: "Home" }, { label: "Shop" }]}
       />
       <Suspense>
-        <CatalogBrowser key={initial.q ?? ""} products={products} categories={categories} initial={initial} />
+        <CatalogBrowser key={browserKey} products={products} categories={categories} initial={initial} />
       </Suspense>
     </main>
   );

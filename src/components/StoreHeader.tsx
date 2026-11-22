@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Menu, PackageSearch, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import type { Category } from "@/lib/types";
 import type { AdminSettings } from "@/components/admin/AdminDataProvider";
@@ -17,15 +17,31 @@ const NAV = [
   { href: "/track-order", label: "Track order" },
 ];
 
-export function StoreHeader({ categories, settings }: { categories: Category[]; settings: AdminSettings }) {
+function StoreHeaderContent({ categories, settings }: { categories: Category[]; settings: AdminSettings }) {
   const { count, ready } = useCart();
   const { customer } = useCustomerAuth();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  useEffect(() => setOpen(false), [pathname]);
+  const source = searchParams.get("source");
+
+  useEffect(() => setOpen(false), [pathname, source]);
+
+  function isNavActive(href: string) {
+    if (href === "/products") {
+      return pathname === "/products" && source !== "pre_order";
+    }
+    if (href === "/products?source=pre_order") {
+      return pathname === "/products" && source === "pre_order";
+    }
+    if (href === "/track-order") {
+      return pathname === "/track-order" || pathname.startsWith("/track-order/");
+    }
+    return pathname === href;
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,6 +50,11 @@ export function StoreHeader({ categories, settings }: { categories: Category[]; 
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/90 backdrop-blur-md">
+      {settings.announcement.trim() && (
+        <div role="status" className="bg-marigold px-5 py-2 text-center text-xs font-semibold text-ink">
+          {settings.announcement}
+        </div>
+      )}
       <div className="bg-forest text-paper">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-2 text-xs">
           <p className="truncate">
@@ -49,12 +70,19 @@ export function StoreHeader({ categories, settings }: { categories: Category[]; 
         </button>
         <Logo name={settings.storeName} />
 
-        <nav className="hidden items-center gap-6 text-sm font-medium lg:flex">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="relative py-1 text-ink-soft transition hover:text-ink">
-              {n.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-1.5 text-sm font-medium lg:flex">
+          {NAV.map((n) => {
+            const active = isNavActive(n.href);
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                className={`rounded-full px-3.5 py-1.5 transition ${active ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-2 hover:text-ink"}`}
+              >
+                {n.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <form onSubmit={submit} className="ml-auto hidden max-w-sm flex-1 md:block" role="search">
@@ -116,12 +144,19 @@ export function StoreHeader({ categories, settings }: { categories: Category[]; 
             </label>
           </form>
           <nav className="grid gap-1">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="rounded-xl px-3 py-2.5 font-display text-lg font-semibold hover:bg-paper-2">
-                {n.label}
-              </Link>
-            ))}
-            <Link href={customer ? "/profile" : "/login"} className="rounded-xl px-3 py-2.5 font-display text-lg font-semibold hover:bg-paper-2">
+            {NAV.map((n) => {
+              const active = isNavActive(n.href);
+              return (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className={`rounded-xl px-3 py-2.5 font-display text-lg font-semibold transition ${active ? "bg-ink text-paper" : "hover:bg-paper-2"}`}
+                >
+                  {n.label}
+                </Link>
+              );
+            })}
+            <Link key="account" href={customer ? "/profile" : "/login"} className="rounded-xl px-3 py-2.5 font-display text-lg font-semibold hover:bg-paper-2">
               {customer ? "My account" : "Sign in"}
             </Link>
           </nav>
@@ -136,5 +171,13 @@ export function StoreHeader({ categories, settings }: { categories: Category[]; 
         </div>
       )}
     </header>
+  );
+}
+
+export function StoreHeader({ categories, settings }: { categories: Category[]; settings: AdminSettings }) {
+  return (
+    <Suspense fallback={<div className="h-28 border-b border-line/70 bg-paper/90" />}>
+      <StoreHeaderContent categories={categories} settings={settings} />
+    </Suspense>
   );
 }

@@ -44,11 +44,11 @@ function mapProduct(row: ProductRow): Product {
     stock: row.stock,
     lowStockThreshold: row.low_stock_threshold,
     preorderEta: row.preorder_eta ?? undefined,
-    images: row.images,
+    images: Array.isArray(row.images) ? row.images : [],
     paymentMethods: row.payment_methods,
-    rating: Number(row.rating),
-    reviewCount: row.review_count,
-    soldCount: row.sold_count,
+    rating: Number(row.rating ?? 0),
+    reviewCount: Number(row.review_count ?? 0),
+    soldCount: Number(row.sold_count ?? 0),
     highlights: row.highlights,
     specs: row.specs,
     tags: row.tags,
@@ -62,7 +62,7 @@ export async function listStorefrontProducts() {
     SELECT p.*, s.slug AS seller_slug, s.name AS seller_name, s.kind AS seller_kind,
       s.area AS seller_area, s.city AS seller_city, s.rating AS seller_rating, s.handover_days AS seller_handover_days
     FROM products p JOIN sellers s ON s.id=p.seller_id
-    WHERE p.status <> 'draft'
+    WHERE p.status <> 'draft' AND s.active
     ORDER BY p.created_at DESC, p.title
   `;
   return rows.map(mapProduct);
@@ -74,7 +74,7 @@ export async function listProductsByCategory(categorySlug: string) {
     SELECT p.*, s.slug AS seller_slug, s.name AS seller_name, s.kind AS seller_kind,
       s.area AS seller_area, s.city AS seller_city, s.rating AS seller_rating, s.handover_days AS seller_handover_days
     FROM products p JOIN sellers s ON s.id=p.seller_id
-    WHERE p.status <> 'draft' AND p.category_slug=${categorySlug}
+    WHERE p.status <> 'draft' AND s.active AND p.category_slug=${categorySlug}
     ORDER BY p.created_at DESC, p.title
   `;
   return rows.map(mapProduct);
@@ -86,7 +86,7 @@ export async function getStorefrontProductBySlug(slug: string) {
     SELECT p.*, s.slug AS seller_slug, s.name AS seller_name, s.kind AS seller_kind,
       s.area AS seller_area, s.city AS seller_city, s.rating AS seller_rating, s.handover_days AS seller_handover_days
     FROM products p JOIN sellers s ON s.id=p.seller_id
-    WHERE p.slug=${slug} AND p.status <> 'draft'
+    WHERE p.slug=${slug} AND p.status <> 'draft' AND s.active
     LIMIT 1
   `;
   return row ? mapProduct(row) : undefined;
@@ -99,7 +99,7 @@ export async function getStorefrontProductsByIds(ids: string[]) {
     SELECT p.*, s.slug AS seller_slug, s.name AS seller_name, s.kind AS seller_kind,
       s.area AS seller_area, s.city AS seller_city, s.rating AS seller_rating, s.handover_days AS seller_handover_days
     FROM products p JOIN sellers s ON s.id=p.seller_id
-    WHERE p.id IN ${sql(ids)} AND p.status <> 'draft'
+    WHERE p.id IN ${sql(ids)} AND p.status <> 'draft' AND s.active
   `;
   const byId = new Map(rows.map((row) => [row.id, mapProduct(row)]));
   return ids.map((id) => byId.get(id)).filter((product): product is Product => product !== undefined);
@@ -122,7 +122,7 @@ export async function getCategoryBySlug(slug: string) {
 }
 
 export async function listSellers(): Promise<Seller[]> {
-  const rows = await getDb()`SELECT id,slug,name,kind,area,city,commission_rate AS "commissionRate",rating,handover_days AS "handoverDays" FROM sellers ORDER BY name`;
+  const rows = await getDb()`SELECT id,slug,name,kind,area,city,commission_rate AS "commissionRate",rating,handover_days AS "handoverDays" FROM sellers WHERE active ORDER BY name`;
   return rows.map((row) => ({
     id: row.id,
     slug: row.slug,
@@ -171,6 +171,9 @@ export async function getBusinessSettings(): Promise<AdminSettings> {
     storeName: value?.storeName ?? "Haatly",
     phone: value?.phone ?? "",
     whatsapp: value?.whatsapp ?? "",
+    announcement: value?.announcement ?? "",
+    bkashNumber: value?.bkashNumber ?? "",
+    nagadNumber: value?.nagadNumber ?? "",
     email: value?.email ?? "",
     facebook: value?.facebook ?? "",
     instagram: value?.instagram ?? "",

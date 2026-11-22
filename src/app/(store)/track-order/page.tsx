@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Check, CircleAlert, CreditCard, MapPin, PackageSearch, Truck } from "lucide-react";
+import { Check, CircleAlert, CreditCard, MapPin, PackageSearch, Truck, X } from "lucide-react";
 import { getSellersByIds } from "@/lib/catalog";
 import { findPublicOrder } from "@/lib/db/order-repository";
 import { cdn } from "@/lib/image";
 import { formatPrice } from "@/lib/site";
-import { ORDER_FLOW, ORDER_STATUS_LABEL, paymentMethodLabel, type Order, type Seller } from "@/lib/types";
+import { ORDER_FLOW, ORDER_STATUS_LABEL, orderProgressIndex, paymentMethodLabel, type Order, type Seller } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Track your order" };
 export const dynamic = "force-dynamic";
@@ -62,10 +62,11 @@ export default async function TrackOrderPage({ searchParams }: { searchParams: S
 }
 
 function OrderResult({ order, sellerNames }: { order: Order; sellerNames: Map<string, string> }) {
-  const current = ORDER_FLOW.indexOf(order.status);
+  const current = orderProgressIndex(order);
   const subtotal = order.lines.reduce((n, l) => n + l.qty * l.unitPrice, 0);
   const total = subtotal + order.deliveryFee - order.discount;
-  const progress = current / (ORDER_FLOW.length - 1);
+  const progress = Math.max(0, current / (ORDER_FLOW.length - 1));
+  const cancelledEvent = order.timeline.find((event) => event.status === "cancelled");
 
   return (
     <section className="mt-12 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
@@ -77,6 +78,12 @@ function OrderResult({ order, sellerNames }: { order: Order; sellerNames: Map<st
           </div>
           <p className="flex items-center gap-2 rounded-full bg-paper-2 px-4 py-2 text-sm"><Truck className="size-4 text-clay" />{order.courier}</p>
         </div>
+
+        {order.status === "cancelled" && (
+          <p role="status" className="mt-5 rounded-2xl bg-clay/10 px-4 py-3 text-sm text-clay">
+            This order was cancelled. Cancellation does not automatically refund a payment; contact Haatly support about any pending or paid payment.
+          </p>
+        )}
 
         {/* Horizontal progress (desktop) */}
         <div className="relative mt-10 hidden md:block">
@@ -111,10 +118,22 @@ function OrderResult({ order, sellerNames }: { order: Order; sellerNames: Map<st
                   <p className={`font-semibold ${done ? "" : "text-muted"}`}>{ORDER_STATUS_LABEL[s]}</p>
                   {event && <p className="font-mono text-xs text-muted">{when(event.at)}</p>}
                 </div>
-                <p className="mt-0.5 text-sm text-ink-soft">{event ? event.note : i === current + 1 ? "Up next" : "—"}</p>
+                <p className="mt-0.5 text-sm text-ink-soft">{event ? event.note : order.status !== "cancelled" && i === current + 1 ? "Up next" : "—"}</p>
               </li>
             );
           })}
+          {order.status === "cancelled" && (
+            <li className="relative pb-8 last:pb-0">
+              <span className="absolute -left-[41px] top-0.5 grid size-5 place-items-center rounded-full bg-clay">
+                <X className="size-3 text-paper" strokeWidth={3} />
+              </span>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="font-semibold text-clay">{ORDER_STATUS_LABEL.cancelled}</p>
+                {cancelledEvent && <p className="font-mono text-xs text-muted">{when(cancelledEvent.at)}</p>}
+              </div>
+              <p className="mt-0.5 text-sm text-ink-soft">{cancelledEvent?.note ?? "This order was cancelled."}</p>
+            </li>
+          )}
         </ol>
       </div>
 

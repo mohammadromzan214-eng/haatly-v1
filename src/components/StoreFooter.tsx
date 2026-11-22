@@ -37,7 +37,6 @@ export function StoreFooter({ categories, settings }: { categories: Category[]; 
           <ul className="mt-4 space-y-2 text-sm text-paper/75">
             {settings.phone && <li className="font-mono">{settings.phone}</li>}
             {settings.email && <li>{settings.email}</li>}
-            <li className="pt-2"><Link href="/admin/inventory" className="hover:text-paper">Admin console →</Link></li>
           </ul>
         </div>
       </div>

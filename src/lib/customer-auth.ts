@@ -5,6 +5,11 @@ export interface CustomerSession {
   phone: string;
 }
 
+export interface CustomerSessionClaims extends CustomerSession {
+  sessionVersion: number;
+  exp: number;
+}
+
 const SESSION_COOKIE = "haatly_customer_session";
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 
@@ -56,15 +61,16 @@ function constantTimeEqual(a: string, b: string) {
   return mismatch === 0;
 }
 
-export async function createCustomerSession(customer: CustomerSession) {
+export async function createCustomerSession(customer: CustomerSession, sessionVersion = 0) {
   const payload = base64UrlEncode(encodeText(JSON.stringify({
     ...customer,
+    sessionVersion,
     exp: Date.now() + SESSION_TTL_SECONDS * 1000,
   })));
   return `${payload}.${await signPayload(payload)}`;
 }
 
-export async function verifyCustomerSession(token: string | undefined): Promise<CustomerSession | null> {
+export async function verifyCustomerSessionClaims(token: string | undefined): Promise<CustomerSessionClaims | null> {
   if (!token) return null;
   const parts = token.split(".");
   if (parts.length !== 2) return null;
@@ -72,10 +78,29 @@ export async function verifyCustomerSession(token: string | undefined): Promise<
   if (!payload || !signature || !constantTimeEqual(signature, await signPayload(payload))) return null;
 
   try {
-    const decoded = JSON.parse(new TextDecoder().decode(base64UrlDecode(payload))) as CustomerSession & { exp: number };
-    if (!decoded.id || !decoded.name || !decoded.email || decoded.exp <= Date.now()) return null;
-    return { id: decoded.id, name: decoded.name, email: decoded.email, phone: decoded.phone };
+    const decoded = JSON.parse(new TextDecoder().decode(base64UrlDecode(payload))) as Partial<CustomerSessionClaims>;
+    const sessionVersion = decoded.sessionVersion ?? 0;
+    if (typeof decoded.id !== "string" || !decoded.id
+        || typeof decoded.name !== "string" || !decoded.name
+        || typeof decoded.email !== "string" || !decoded.email
+        || typeof decoded.phone !== "string"
+        || !Number.isInteger(sessionVersion) || sessionVersion < 0
+        || typeof decoded.exp !== "number" || decoded.exp <= Date.now()) return null;
+    return {
+      id: decoded.id,
+      name: decoded.name,
+      email: decoded.email,
+      phone: decoded.phone,
+      sessionVersion,
+      exp: decoded.exp,
+    };
   } catch {
     return null;
   }
+}
+
+export async function verifyCustomerSession(token: string | undefined): Promise<CustomerSession | null> {
+  const claims = await verifyCustomerSessionClaims(token);
+  if (!claims) return null;
+  return { id: claims.id, name: claims.name, email: claims.email, phone: claims.phone };
 }

@@ -22,18 +22,20 @@ export async function proxy(request: NextRequest) {
   if (!pathname.startsWith("/admin")) return NextResponse.next();
 
   if (pathname === "/admin/login") {
-    const authenticated = await verifyAdminSession(request.cookies.get(getAdminSessionCookieName())?.value);
-    if (authenticated) {
-      return NextResponse.redirect(new URL("/admin/inventory", request.url));
-    }
     return NextResponse.next();
   }
 
-  const authenticated = await verifyAdminSession(request.cookies.get(getAdminSessionCookieName())?.value);
-  if (!authenticated) {
+  const adminSession = await verifyAdminSession(request.cookies.get(getAdminSessionCookieName())?.value);
+  if (!adminSession) {
     const loginUrl = new URL("/admin/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (adminSession.role === "order_admin"
+      && pathname !== "/admin/orders"
+      && pathname !== "/admin/payments") {
+    return NextResponse.redirect(new URL("/admin/orders", request.url));
   }
 
   return NextResponse.next();

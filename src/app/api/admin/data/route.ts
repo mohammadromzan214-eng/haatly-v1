@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminSessionCookieName, verifyAdminSession } from "@/lib/admin-auth";
-import { readAdminSnapshot, writeAdminMutation } from "@/lib/db/admin-repository";
+import { getAdminSessionCookieName } from "@/lib/admin-auth";
+import { getAuthenticatedAdminSession } from "@/lib/admin-access";
+import { AdminSettingsValidationError, readAdminSnapshot, writeAdminMutation } from "@/lib/db/admin-repository";
 
 async function authorized(request: NextRequest) {
-  return verifyAdminSession(request.cookies.get(getAdminSessionCookieName())?.value);
+  const session = await getAuthenticatedAdminSession(request.cookies.get(getAdminSessionCookieName())?.value);
+  return session?.role === "super_admin";
 }
 
 export async function GET(request: NextRequest) {
@@ -33,6 +35,9 @@ export async function POST(request: NextRequest) {
     await writeAdminMutation({ entity: body.entity, operation: body.operation, data: body.data });
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof AdminSettingsValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error("Could not write admin data.", error);
     return NextResponse.json({ error: "Could not save changes to the database." }, { status: 500 });
   }

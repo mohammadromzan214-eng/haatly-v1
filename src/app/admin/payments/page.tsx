@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AlertCircle, Check, CircleDollarSign, LoaderCircle, RefreshCw, ShieldCheck } from "lucide-react";
 import { formatPrice } from "@/lib/site";
 import { paymentMethodLabel, type PaymentStatus } from "@/lib/types";
+import type { AdminRole } from "@/lib/admin-types";
 
 interface PaymentRow {
   id: string;
@@ -36,19 +37,23 @@ const STATUS_CLASSES: Record<PaymentStatus, string> = {
 function VerificationForm({
   payment,
   saving,
+  role,
   onSave,
 }: {
   payment: PaymentRow;
   saving: boolean;
+  role: AdminRole;
   onSave: (status: PaymentStatus, transactionReference: string, verificationNote: string) => void;
 }) {
   const [reference, setReference] = useState(payment.transactionReference ?? "");
   const [note, setNote] = useState(payment.verificationNote);
-  const actions: PaymentStatus[] = payment.status === "pending"
-    ? ["paid", "failed"]
-    : payment.status === "failed"
-      ? ["pending", "paid"]
-      : payment.status === "paid" ? ["refunded"] : [];
+  const actions: PaymentStatus[] = role === "order_admin"
+    ? payment.status === "pending" ? ["paid", "failed"] : payment.status === "failed" ? ["paid"] : payment.status === "paid" ? ["refunded"] : []
+    : payment.status === "pending"
+      ? ["paid", "failed"]
+      : payment.status === "failed"
+        ? ["pending", "paid"]
+        : payment.status === "paid" ? ["refunded"] : [];
 
   return (
     <div className="mt-5 border-t border-line pt-4">
@@ -70,7 +75,7 @@ function VerificationForm({
       <div className="mt-4 flex flex-wrap gap-2">
         {actions.map((status) => (
           <button key={status} type="button" disabled={saving} onClick={() => onSave(status, reference, note)} className={`rounded-full px-4 py-2 text-xs font-semibold capitalize transition disabled:opacity-50 ${status === "paid" ? "bg-forest text-paper hover:bg-forest/90" : status === "failed" || status === "refunded" ? "bg-clay text-paper hover:bg-clay/90" : "border border-line hover:border-ink"}`}>
-            {saving ? "Saving…" : status === "paid" ? "Mark paid" : status === "failed" ? "Mark failed" : status === "refunded" ? "Mark refunded" : "Reopen as pending"}
+            {saving ? "Saving…" : status === "paid" ? "Mark paid" : status === "failed" ? "Mark failed" : status === "refunded" ? "Record refund" : "Reopen as pending"}
           </button>
         ))}
         {payment.status === "refunded" && <span className="rounded-full bg-paper-2 px-4 py-2 text-xs font-semibold text-muted">Refund recorded</span>}
@@ -82,6 +87,7 @@ function VerificationForm({
 export default function AdminPaymentsPage() {
   const [filter, setFilter] = useState<PaymentFilter>("all");
   const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [role, setRole] = useState<AdminRole>("super_admin");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
   const [error, setError] = useState("");
@@ -94,9 +100,12 @@ export default function AdminPaymentsPage() {
     const query = filter === "all" ? "" : `?status=${filter}`;
     fetch(`/api/admin/payments${query}`, { cache: "no-store", credentials: "same-origin" })
       .then(async (response) => {
-        const result = await response.json() as { payments?: PaymentRow[]; error?: string };
+        const result = await response.json() as { payments?: PaymentRow[]; role?: AdminRole; error?: string };
         if (!response.ok) throw new Error(result.error ?? "Could not load payments.");
-        if (active) setPayments(result.payments ?? []);
+        if (active) {
+          setPayments(result.payments ?? []);
+          if (result.role) setRole(result.role);
+        }
       })
       .catch((cause: unknown) => {
         if (active) setError(cause instanceof Error ? cause.message : "Could not load payments.");
@@ -136,7 +145,7 @@ export default function AdminPaymentsPage() {
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.25em] text-clay">Sales</p>
           <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight">Payments</h1>
-          <p className="mt-2 max-w-2xl text-sm text-ink-soft">Review payment status, transaction references and manual verification details. Mock bKash/Nagad records are never treated as paid automatically.</p>
+          <p className="mt-2 max-w-2xl text-sm text-ink-soft">Review payment status, transaction references and manual verification details. Recording a refund does not transfer money; mock bKash/Nagad records are never treated as paid automatically.</p>
         </div>
         <button type="button" onClick={() => setReload((value) => value + 1)} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-semibold hover:border-ink"><RefreshCw className="size-4" /> Refresh</button>
       </div>
@@ -174,7 +183,7 @@ export default function AdminPaymentsPage() {
               <p className="text-xs text-muted">Created {new Date(payment.createdAt).toLocaleString()}</p>
               {payment.status === "paid" && <p className="flex items-center gap-1 text-xs text-forest"><Check className="size-3" />Payment verified</p>}
             </div>
-            <VerificationForm payment={payment} saving={savingId === payment.id} onSave={(status, reference, note) => void saveVerification(payment, status, reference, note)} />
+            <VerificationForm payment={payment} saving={savingId === payment.id} role={role} onSave={(status, reference, note) => void saveVerification(payment, status, reference, note)} />
           </article>
         ))}
       </div>

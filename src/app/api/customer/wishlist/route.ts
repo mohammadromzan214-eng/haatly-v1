@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCustomerSessionCookieName, verifyCustomerSession } from "@/lib/customer-auth";
+import { customerSessionUnavailableResponse, verifyActiveCustomerRequest } from "@/lib/customer-access";
 import { getCustomerWishlist, setCustomerWishlistItem } from "@/lib/db/customer-repository";
 
-async function getUserId(request: NextRequest) {
-  return (await verifyCustomerSession(request.cookies.get(getCustomerSessionCookieName())?.value))?.id ?? null;
-}
-
 export async function GET(request: NextRequest) {
-  const userId = await getUserId(request);
+  const check = await verifyActiveCustomerRequest(request);
+  if (check.status === "unavailable") return customerSessionUnavailableResponse();
+  const userId = check.status === "authenticated" ? check.customer.id : null;
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   try {
     return NextResponse.json({ wishlist: await getCustomerWishlist(userId) }, { headers: { "Cache-Control": "no-store" } });
@@ -18,7 +16,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const userId = await getUserId(request);
+  const check = await verifyActiveCustomerRequest(request);
+  if (check.status === "unavailable") return customerSessionUnavailableResponse();
+  const userId = check.status === "authenticated" ? check.customer.id : null;
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   let body: { productId?: unknown };
   try {
@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const userId = await getUserId(request);
+  const check = await verifyActiveCustomerRequest(request);
+  if (check.status === "unavailable") return customerSessionUnavailableResponse();
+  const userId = check.status === "authenticated" ? check.customer.id : null;
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   const productId = request.nextUrl.searchParams.get("productId");
   if (!productId) return NextResponse.json({ error: "Product id is required." }, { status: 400 });

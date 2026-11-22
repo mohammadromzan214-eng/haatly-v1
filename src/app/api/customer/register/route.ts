@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   const session = toSession(customer);
   const response = NextResponse.json({ customer: session });
-  response.cookies.set(getCustomerSessionCookieName(), await createCustomerSession(session), {
+  response.cookies.set(getCustomerSessionCookieName(), await createCustomerSession(session, customer.sessionVersion), {
     httpOnly: true,
     secure: request.nextUrl.protocol === "https:",
     sameSite: "lax",

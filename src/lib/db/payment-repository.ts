@@ -104,6 +104,7 @@ export async function updateAdminPayment(input: {
   status: PaymentStatus;
   transactionReference: string | null;
   verificationNote: string;
+  verifiedBy: string;
 }) {
   const sql = getDb();
   return sql.begin(async (tx) => {
@@ -125,7 +126,7 @@ export async function updateAdminPayment(input: {
       ? "verified"
       : input.status === "failed" ? "rejected" : "unverified";
     const verifiedAt = verificationStatus === "unverified" ? null : new Date();
-    const verifiedBy = verificationStatus === "unverified" ? null : "mock-admin";
+    const verifiedBy = verificationStatus === "unverified" ? null : input.verifiedBy;
     await tx`
       UPDATE payments
       SET status=${input.status},transaction_reference=${input.transactionReference},

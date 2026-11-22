@@ -12,6 +12,9 @@ import { WishButton } from "./WishButton";
 export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const seller = product.seller;
   const soldOut = !isPurchasable(product);
+  const rating = Number.isFinite(product.rating) ? product.rating : 0;
+  const reviewCount = Number.isFinite(product.reviewCount) ? product.reviewCount : 0;
+  const soldCount = Number.isFinite(product.soldCount) ? product.soldCount : 0;
   return (
     <article className="group relative flex flex-col">
       <Link href={`/products/${product.slug}`} className="relative block overflow-hidden rounded-[22px] bg-paper-2">
@@ -43,10 +46,10 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           </h3>
           <div className="mt-1 flex items-center gap-1 text-xs text-muted">
             <Star className="size-3.5 fill-marigold text-marigold" />
-            <span className="font-semibold text-ink">{product.rating.toFixed(1)}</span>
-            <span>({product.reviewCount.toLocaleString("en-IN")})</span>
+            <span className="font-semibold text-ink">{rating.toFixed(1)}</span>
+            <span>({reviewCount.toLocaleString("en-IN")})</span>
             <span aria-hidden>·</span>
-            <span>{product.soldCount.toLocaleString("en-IN")} sold</span>
+            <span>{soldCount.toLocaleString("en-IN")} sold</span>
           </div>
           <div className="mt-2">
             <Price price={product.price} compareAt={product.compareAtPrice} />

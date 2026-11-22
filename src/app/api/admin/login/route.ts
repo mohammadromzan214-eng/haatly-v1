@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   AdminAuthConfigurationError,
-  adminCredentialsMatch,
   createAdminSession,
   getAdminSessionCookieName,
   getAdminSessionTtlSeconds,
 } from "@/lib/admin-auth";
+import { authenticateAdminCredentials } from "@/lib/admin-access";
+import type { AdminLoginIdentity } from "@/lib/admin-types";
 
 const MAX_FAILED_ATTEMPTS = 5;
 const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
@@ -103,17 +104,18 @@ export async function POST(request: NextRequest) {
     return jsonError("Too many attempts. Try again later.", 429);
   }
 
-  let credentialsMatch: boolean;
+  let identity: AdminLoginIdentity | null;
   try {
-    credentialsMatch = adminCredentialsMatch(body.email, body.password);
+    identity = await authenticateAdminCredentials(body.email, body.password);
   } catch (error) {
     if (error instanceof AdminAuthConfigurationError) {
       return jsonError("Admin authentication is not configured.", 503);
     }
-    throw error;
+    console.error("Could not authenticate admin.", error);
+    return jsonError("Admin sign-in is temporarily unavailable.", 503);
   }
 
-  if (!credentialsMatch) {
+  if (!identity) {
     const blocked = recordFailedAttempt(clientKey, now);
     return jsonError(
       blocked ? "Too many attempts. Try again later." : "Invalid email or password.",
@@ -122,8 +124,8 @@ export async function POST(request: NextRequest) {
   }
 
   attempts.delete(clientKey);
-  const response = NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
-  response.cookies.set(getAdminSessionCookieName(), await createAdminSession(), {
+  const response = NextResponse.json({ ok: true, role: identity.role }, { headers: { "Cache-Control": "no-store" } });
+  response.cookies.set(getAdminSessionCookieName(), await createAdminSession(identity), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

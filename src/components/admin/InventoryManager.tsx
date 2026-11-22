@@ -5,7 +5,8 @@ import { AlertTriangle, Boxes, CalendarClock, Handshake, Minus, PackageCheck, Pl
 import { SOURCE_TYPE_LABEL, stockBadge } from "@/lib/catalog-utils";
 import { cdn } from "@/lib/image";
 import { formatPrice } from "@/lib/site";
-import type { Category, Product, ProductStatus, Seller, SourceType } from "@/lib/types";
+import type { Category, Product, ProductStatus, SourceType } from "@/lib/types";
+import type { AdminSeller } from "./AdminDataProvider";
 import { StockBadge } from "../StockBadge";
 import { useToast } from "../Providers";
 
@@ -26,7 +27,7 @@ const SOURCE_TABS: { key: SourceType | "all"; label: string; icon: typeof Boxes 
 ];
 
 /**
- * Inventory rules (kept client-side for milestone 1; they move to the server with the database):
+ * UI inventory rules:
  * - Stock reaching 0 on an active own-stock / partner listing flips it to "Out of Stock".
  * - Restocking an "Out of Stock" listing flips it back to "Active".
  * - Pre-order stock is the reservation cap, so it never auto-flips status.
@@ -41,9 +42,9 @@ function applyRules(next: Row, prev: Row): Row {
 
 export function InventoryManager({ products, sellers, categories, onSave }: {
   products: Product[];
-  sellers: Seller[];
+  sellers: AdminSeller[];
   categories: Category[];
-  onSave?: (rows: Row[]) => void;
+  onSave?: (rows: Row[]) => void | boolean | Promise<void | boolean>;
 }) {
   const notify = useToast();
   const initial = useMemo(() => Object.fromEntries(products.map((p) => [p.id, { id: p.id, sourceType: p.sourceType, status: p.status, stock: p.stock }])), [products]);
@@ -53,6 +54,7 @@ export function InventoryManager({ products, sellers, categories, onSave }: {
   const [source, setSource] = useState<SourceType | "all">("all");
   const [status, setStatus] = useState<ProductStatus | "all">("all");
   const [lowOnly, setLowOnly] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const sellerById = useMemo(() => Object.fromEntries(sellers.map((s) => [s.id, s])), [sellers]);
   const catBySlug = useMemo(() => Object.fromEntries(categories.map((c) => [c.slug, c])), [categories]);
@@ -66,6 +68,20 @@ export function InventoryManager({ products, sellers, categories, onSave }: {
 
   function update(id: string, patch: Partial<Row>) {
     setRows((cur) => ({ ...cur, [id]: applyRules({ ...cur[id], ...patch }, cur[id]) }));
+  }
+
+  async function saveChanges() {
+    if (!onSave || saving) return;
+    setSaving(true);
+    try {
+      if (await onSave(dirtyIds.map((id) => rows[id])) === false) return;
+      setSaved({ ...rows });
+      notify(`Inventory updated · ${dirtyIds.length} ${dirtyIds.length === 1 ? "listing" : "listings"}`);
+    } catch {
+      notify("Could not save inventory changes.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const visible = products.filter((p) => {
@@ -84,7 +100,7 @@ export function InventoryManager({ products, sellers, categories, onSave }: {
     { label: "Active listings", value: all.filter(({ r }) => r.status === "active").length.toString(), sub: `${all.filter(({ r }) => r.status === "draft").length} drafts` },
     { label: "Own-stock units", value: all.filter(({ r }) => r.sourceType === "own_stock").reduce((n, { r }) => n + r.stock, 0).toLocaleString("en-IN"), sub: "Tejgaon warehouse" },
     { label: "Own-stock value", value: formatPrice(all.filter(({ r }) => r.sourceType === "own_stock").reduce((n, { p, r }) => n + r.stock * p.price, 0)), sub: "at retail price" },
-    { label: "Partner listings", value: all.filter(({ r }) => r.sourceType === "partner_shop").length.toString(), sub: `${sellers.filter((s) => s.kind === "partner").length} partner shops` },
+    { label: "Partner listings", value: all.filter(({ r }) => r.sourceType === "partner_shop").length.toString(), sub: `${sellers.filter((s) => s.kind === "partner" && s.active).length} active partner shops` },
     { label: "Pre-order slots", value: all.filter(({ r }) => r.sourceType === "pre_order").reduce((n, { r }) => n + r.stock, 0).toString(), sub: "reservations open" },
     { label: "Low-stock alerts", value: all.filter(({ p, r }) => isLow(p, r)).length.toString(), sub: "at or below threshold", alert: true },
   ];
@@ -262,10 +278,11 @@ export function InventoryManager({ products, sellers, categories, onSave }: {
               <RotateCcw className="size-4" /> Discard
             </button>
             <button
-              onClick={() => { onSave?.(dirtyIds.map((id) => rows[id])); setSaved(rows); notify(`Inventory updated · ${dirtyIds.length} ${dirtyIds.length === 1 ? "listing" : "listings"}`); }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-marigold px-5 py-2 text-sm font-semibold text-ink hover:bg-marigold-soft"
+              onClick={() => void saveChanges()}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-full bg-marigold px-5 py-2 text-sm font-semibold text-ink hover:bg-marigold-soft disabled:opacity-50"
             >
-              <Save className="size-4" /> Save changes
+              <Save className="size-4" /> {saving ? "Saving…" : "Save changes"}
             </button>
           </div>
         </div>

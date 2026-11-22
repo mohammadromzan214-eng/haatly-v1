@@ -11,10 +11,13 @@ export default function InventoryPage() {
       products={products}
       sellers={sellers}
       categories={categories}
-      onSave={(rows) => rows.forEach((row) => {
-        const product = products.find((item) => item.id === row.id);
-        if (product) saveProduct({ ...product, ...row });
-      })}
+      onSave={async (rows) => {
+        for (const row of rows) {
+          const product = products.find((item) => item.id === row.id);
+          if (product && !await saveProduct({ ...product, ...row })) return false;
+        }
+        return true;
+      }}
     />
   );
 }

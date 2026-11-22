@@ -5,6 +5,7 @@ import { categories as fixtureCategories, coupons as fixtureCoupons, products as
 import type { Category, PaymentMethod, Product, ProductStatus, Seller, SourceType } from "@/lib/types";
 
 export type AdminProduct = Product & { paymentMethods: PaymentMethod[] };
+export type AdminSeller = Seller & { active: boolean };
 export interface AdminCoupon {
   id: string;
   code: string;
@@ -25,6 +26,9 @@ export interface AdminSettings {
   storeName: string;
   phone: string;
   whatsapp: string;
+  announcement: string;
+  bkashNumber: string;
+  nagadNumber: string;
   email: string;
   facebook: string;
   instagram: string;
@@ -39,20 +43,21 @@ interface AdminDataValue {
   error: string;
   products: AdminProduct[];
   categories: Category[];
-  sellers: Seller[];
+  sellers: AdminSeller[];
   coupons: AdminCoupon[];
   banners: AdminBanner[];
   settings: AdminSettings;
   content: AdminContent;
-  saveProduct: (product: AdminProduct) => void;
-  deleteProduct: (id: string) => void;
-  saveCategory: (category: Category) => void;
-  deleteCategory: (slug: string) => void;
-  saveCoupon: (coupon: AdminCoupon) => void;
-  deleteCoupon: (id: string) => void;
-  setBanners: (banners: AdminBanner[]) => void;
-  setSettings: (settings: AdminSettings) => void;
-  setContent: (content: AdminContent) => void;
+  refresh: () => Promise<boolean>;
+  saveProduct: (product: AdminProduct) => Promise<boolean>;
+  deleteProduct: (id: string) => Promise<boolean>;
+  saveCategory: (category: Category) => Promise<boolean>;
+  deleteCategory: (slug: string) => Promise<boolean>;
+  saveCoupon: (coupon: AdminCoupon) => Promise<boolean>;
+  deleteCoupon: (id: string) => Promise<boolean>;
+  setBanners: (banners: AdminBanner[]) => Promise<boolean>;
+  setSettings: (settings: AdminSettings) => Promise<boolean>;
+  setContent: (content: AdminContent) => Promise<boolean>;
 }
 
 const AdminDataContext = createContext<AdminDataValue | null>(null);
@@ -75,6 +80,9 @@ const initialSettings: AdminSettings = {
   storeName: "Haatly",
   phone: "09612-428759",
   whatsapp: "",
+  announcement: "",
+  bkashNumber: "",
+  nagadNumber: "",
   email: "care@haatly.com.bd",
   facebook: "",
   instagram: "",
@@ -93,7 +101,7 @@ const initialContent: AdminContent = {
 interface AdminSnapshot {
   products?: AdminProduct[];
   categories?: Category[];
-  sellers?: Seller[];
+  sellers?: AdminSeller[];
   coupons?: AdminCoupon[];
   banners?: AdminBanner[];
   settings?: AdminSettings;
@@ -105,36 +113,38 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(fixtureCategories);
-  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [sellers, setSellers] = useState<AdminSeller[]>([]);
   const [coupons, setCoupons] = useState(initialCoupons);
   const [banners, setBannersState] = useState(initialBanners);
   const [settings, setSettingsState] = useState(initialSettings);
   const [content, setContentState] = useState(initialContent);
 
-  useEffect(() => {
-    let active = true;
-    fetch("/api/admin/data", { cache: "no-store", credentials: "same-origin" })
-      .then(async (response) => {
-        const result = await response.json() as AdminSnapshot & { error?: string };
-        if (!response.ok) throw new Error(result.error ?? "Could not load admin data.");
-        if (!active) return;
-        if (result.products) setProducts(result.products);
-        if (result.categories) setCategories(result.categories);
-        if (result.sellers) setSellers(result.sellers);
-        if (result.coupons) setCoupons(result.coupons);
-        if (result.banners) setBannersState(result.banners);
-        if (result.settings) setSettingsState(result.settings);
-        if (result.content) setContentState(result.content);
-        setError("");
-      })
-      .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : "Could not connect to the database.");
-      })
-      .finally(() => {
-        if (active) setReady(true);
-      });
-    return () => { active = false; };
+  const refresh = useCallback(async () => {
+    setReady(false);
+    try {
+      const response = await fetch("/api/admin/data", { cache: "no-store", credentials: "same-origin" });
+      const result = await response.json() as AdminSnapshot & { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Could not load admin data.");
+      if (result.products) setProducts(result.products);
+      if (result.categories) setCategories(result.categories);
+      if (result.sellers) setSellers(result.sellers);
+      if (result.coupons) setCoupons(result.coupons);
+      if (result.banners) setBannersState(result.banners);
+      if (result.settings) setSettingsState(result.settings);
+      if (result.content) setContentState(result.content);
+      setError("");
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not connect to the database.");
+      return false;
+    } finally {
+      setReady(true);
+    }
   }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   const persist = useCallback(async (entity: string, operation: "upsert" | "delete", data: Record<string, unknown>) => {
     try {
@@ -147,70 +157,82 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error ?? "Could not save changes.");
       setError("");
+      return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not save changes.");
+      return false;
     }
   }, []);
 
-  const saveProduct = useCallback((product: AdminProduct) => {
-    void persist("product", "upsert", product as unknown as Record<string, unknown>);
+  const saveProduct = useCallback(async (product: AdminProduct) => {
+    if (!await persist("product", "upsert", product as unknown as Record<string, unknown>)) return false;
     setProducts((current) => current.some((item) => item.id === product.id)
       ? current.map((item) => item.id === product.id ? product : item)
       : [product, ...current]);
+    return true;
   }, [persist]);
-  const deleteProduct = useCallback((id: string) => {
-    void persist("product", "delete", { id });
+  const deleteProduct = useCallback(async (id: string) => {
+    if (!await persist("product", "delete", { id })) return false;
     setProducts((current) => current.filter((product) => product.id !== id));
+    return true;
   }, [persist]);
-  const saveCategory = useCallback((category: Category) => {
-    void persist("category", "upsert", category as unknown as Record<string, unknown>);
+  const saveCategory = useCallback(async (category: Category) => {
+    if (!await persist("category", "upsert", category as unknown as Record<string, unknown>)) return false;
     setCategories((current) => current.some((item) => item.slug === category.slug)
       ? current.map((item) => item.slug === category.slug ? category : item)
       : [...current, category]);
+    return true;
   }, [persist]);
-  const deleteCategory = useCallback((slug: string) => {
-    const fallbackSlug = categories.find((category) => category.slug !== slug)?.slug ?? "";
-    void persist("category", "delete", { slug, fallbackSlug });
-    setCategories((current) => {
-      const remaining = current.filter((category) => category.slug !== slug);
-      if (remaining.length) {
-        const fallbackSlug = remaining[0].slug;
-        setProducts((items) => items.map((product) => product.categorySlug === slug ? { ...product, categorySlug: fallbackSlug } : product));
-      }
-      return remaining;
-    });
+  const deleteCategory = useCallback(async (slug: string) => {
+    const remaining = categories.filter((category) => category.slug !== slug);
+    const fallbackSlug = remaining[0]?.slug ?? "";
+    if (!await persist("category", "delete", { slug, fallbackSlug })) return false;
+    setCategories(remaining);
+    if (fallbackSlug) {
+      setProducts((items) => items.map((product) => product.categorySlug === slug ? { ...product, categorySlug: fallbackSlug } : product));
+    }
+    return true;
   }, [categories, persist]);
-  const saveCoupon = useCallback((coupon: AdminCoupon) => {
-    void persist("coupon", "upsert", coupon as unknown as Record<string, unknown>);
+  const saveCoupon = useCallback(async (coupon: AdminCoupon) => {
+    if (!await persist("coupon", "upsert", coupon as unknown as Record<string, unknown>)) return false;
     setCoupons((current) => current.some((item) => item.id === coupon.id)
       ? current.map((item) => item.id === coupon.id ? coupon : item)
       : [coupon, ...current]);
+    return true;
   }, [persist]);
-  const deleteCoupon = useCallback((id: string) => {
-    void persist("coupon", "delete", { id });
+  const deleteCoupon = useCallback(async (id: string) => {
+    if (!await persist("coupon", "delete", { id })) return false;
     setCoupons((current) => current.filter((coupon) => coupon.id !== id));
+    return true;
   }, [persist]);
-  const setBanners = useCallback((next: AdminBanner[]) => {
-    for (const banner of next) void persist("banner", "upsert", banner as unknown as Record<string, unknown>);
-    for (const old of banners) if (!next.some((banner) => banner.id === old.id)) void persist("banner", "delete", { id: old.id });
+  const setBanners = useCallback(async (next: AdminBanner[]) => {
+    for (const banner of next) {
+      if (!await persist("banner", "upsert", banner as unknown as Record<string, unknown>)) return false;
+    }
+    for (const old of banners) {
+      if (!next.some((banner) => banner.id === old.id) && !await persist("banner", "delete", { id: old.id })) return false;
+    }
     setBannersState(next);
+    return true;
   }, [banners, persist]);
-  const setSettings = useCallback((next: AdminSettings) => {
-    void persist("settings", "upsert", next as unknown as Record<string, unknown>);
-    setSettingsState(next);
+  const setSettings = useCallback(async (next: AdminSettings) => {
+    const saved = await persist("settings", "upsert", next as unknown as Record<string, unknown>);
+    if (saved) setSettingsState(next);
+    return saved;
   }, [persist]);
-  const setContent = useCallback((next: AdminContent) => {
+  const setContent = useCallback(async (next: AdminContent) => {
     for (const key of Object.keys(next) as AdminContentKey[]) {
-      if (next[key] !== content[key]) void persist("content", "upsert", { slug: key, title: ({ about: "About Us", contact: "Contact Us", faq: "FAQ", privacy: "Privacy Policy", returns: "Return Policy", terms: "Terms & Conditions" })[key], body: next[key] });
+      if (next[key] !== content[key] && !await persist("content", "upsert", { slug: key, title: ({ about: "About Us", contact: "Contact Us", faq: "FAQ", privacy: "Privacy Policy", returns: "Return Policy", terms: "Terms & Conditions" })[key], body: next[key] })) return false;
     }
     setContentState(next);
+    return true;
   }, [content, persist]);
 
   const value = useMemo(() => ({
-    ready, error, products, categories, sellers, coupons, banners, settings, content,
+    ready, error, products, categories, sellers, coupons, banners, settings, content, refresh,
     saveProduct, deleteProduct, saveCategory, deleteCategory, saveCoupon, deleteCoupon,
     setBanners, setSettings, setContent,
-  }), [ready, error, products, categories, sellers, coupons, banners, settings, content, saveProduct, deleteProduct, saveCategory, deleteCategory, saveCoupon, deleteCoupon, setBanners, setSettings, setContent]);
+  }), [ready, error, products, categories, sellers, coupons, banners, settings, content, refresh, saveProduct, deleteProduct, saveCategory, deleteCategory, saveCoupon, deleteCoupon, setBanners, setSettings, setContent]);
 
   return <AdminDataContext.Provider value={value}>
     {error && <div role="alert" className="fixed bottom-4 right-4 z-50 max-w-md rounded-2xl bg-clay px-5 py-3 text-sm font-semibold text-paper shadow-lg">Database: {error}</div>}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, PackageSearch } from "lucide-react";
 import type { Order } from "@/lib/types";
-import { ORDER_FLOW, ORDER_STATUS_LABEL } from "@/lib/types";
+import { ORDER_FLOW, ORDER_STATUS_LABEL, orderProgressIndex, orderProgressPercent } from "@/lib/types";
 import { formatPrice } from "@/lib/site";
 
 export default function ProfileOrdersPage() {
@@ -31,14 +31,15 @@ export default function ProfileOrdersPage() {
       {error && <p role="alert" className="mt-4 text-sm font-medium text-clay">{error}</p>}
       <div className="mt-7 space-y-4">
         {customerOrders.map((order) => {
-          const progress = (ORDER_FLOW.indexOf(order.status) + 1) / ORDER_FLOW.length;
+          const progress = orderProgressPercent(order);
+          const progressIndex = orderProgressIndex(order);
           const total = order.lines.reduce((sum, line) => sum + line.qty * line.unitPrice, 0) + order.deliveryFee - order.discount;
           return (
             <article key={order.code} className="rounded-[26px] border border-line bg-paper p-5 md:p-6">
               <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-4">
                 <div><p className="font-mono text-xs text-muted">{order.code}</p><h2 className="mt-1 font-display text-xl font-bold">{new Date(order.placedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</h2></div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-forest/10 px-3.5 py-1.5 text-xs font-semibold text-forest">{ORDER_STATUS_LABEL[order.status]}</span>
+                  <span className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${order.status === "cancelled" ? "bg-clay/10 text-clay" : "bg-forest/10 text-forest"}`}>{ORDER_STATUS_LABEL[order.status]}</span>
                   {order.paymentStatus && <span className="rounded-full bg-paper-2 px-3.5 py-1.5 text-xs font-semibold capitalize text-ink-soft">Payment {order.paymentStatus}</span>}
                 </div>
               </header>
@@ -50,7 +51,7 @@ export default function ProfileOrdersPage() {
                 <div className="flex justify-between text-xs text-muted"><span>Delivery progress</span><span>{Math.round(progress * 100)}%</span></div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-paper-2"><div className="h-full rounded-full bg-forest" style={{ width: `${progress * 100}%` }} /></div>
                 <div className="mt-2 flex justify-between gap-1">
-                  {ORDER_FLOW.map((status, index) => <span key={status} className={`text-[9px] sm:text-[10px] ${index <= ORDER_FLOW.indexOf(order.status) ? "font-semibold text-forest" : "text-muted"}`}>{ORDER_STATUS_LABEL[status]}</span>)}
+                  {ORDER_FLOW.map((status, index) => <span key={status} className={`text-[9px] sm:text-[10px] ${index <= progressIndex ? "font-semibold text-forest" : "text-muted"}`}>{ORDER_STATUS_LABEL[status]}</span>)}
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">

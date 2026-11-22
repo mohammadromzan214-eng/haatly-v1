@@ -1,24 +1,30 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { getDb } from "./client";
+import { hashPassword, verifyPassword } from "../password";
 import type { CustomerAddress, CustomerSession } from "@/components/CustomerAuthProvider";
 
 export interface DatabaseUser extends CustomerSession {
   role: "customer" | "admin" | "seller";
   passwordHash: string | null;
+  active: boolean;
+  sessionVersion: number;
 }
 
 export async function registerOrLoginGoogleCustomer(input: { subject: string; name: string; email: string }) {
   const normalizedEmail = input.email.trim().toLowerCase();
   return getDb().begin(async (tx) => {
     const [googleUser] = await tx`
-      SELECT id,name,email,phone,role,password_hash FROM users
+      SELECT id,name,email,phone,role,password_hash,is_active,session_version FROM users
       WHERE google_sub=${input.subject} AND role='customer'
       FOR UPDATE
     `;
-    if (googleUser) return userFromRow(googleUser);
+    if (googleUser) {
+      if (!googleUser.is_active) throw new Error("This Haatly account is disabled.");
+      return userFromRow(googleUser);
+    }
 
     const [emailUser] = await tx`
-      SELECT id,name,email,phone,role,password_hash,google_sub FROM users
+      SELECT id,name,email,phone,role,password_hash,google_sub,is_active,session_version FROM users
       WHERE lower(email)=${normalizedEmail}
       FOR UPDATE
     `;
@@ -26,11 +32,12 @@ export async function registerOrLoginGoogleCustomer(input: { subject: string; na
       if (emailUser.role !== "customer" || (emailUser.google_sub && emailUser.google_sub !== input.subject)) {
         throw new Error("This Google account cannot be linked to the existing Haatly account.");
       }
+      if (!emailUser.is_active) throw new Error("This Haatly account is disabled.");
       const [linkedUser] = await tx`
         UPDATE users
         SET google_sub=${input.subject},auth_provider='google',name=${input.name.trim() || emailUser.name},updated_at=now()
         WHERE id=${emailUser.id}
-        RETURNING id,name,email,phone,role,password_hash
+        RETURNING id,name,email,phone,role,password_hash,is_active,session_version
       `;
       return userFromRow(linkedUser);
     }
@@ -39,27 +46,14 @@ export async function registerOrLoginGoogleCustomer(input: { subject: string; na
       INSERT INTO users (id,name,email,phone,password_hash,role,google_sub,auth_provider)
       VALUES (${`cus_${randomBytes(12).toString("hex")}`},${input.name.trim() || normalizedEmail.split("@")[0]},
         ${normalizedEmail},'',NULL,'customer',${input.subject},'google')
-      RETURNING id,name,email,phone,role,password_hash
+      RETURNING id,name,email,phone,role,password_hash,is_active,session_version
     `;
     return userFromRow(createdUser);
   });
 }
 
-function hashPassword(password: string, salt = randomBytes(16).toString("hex")) {
-  return `scrypt$${salt}$${scryptSync(password, salt, 64).toString("hex")}`;
-}
-
 export function hashCustomerPassword(password: string) {
   return hashPassword(password);
-}
-
-function verifyPassword(password: string, encoded: string | null) {
-  if (!encoded) return false;
-  const [algorithm, salt, expected] = encoded.split("$");
-  if (algorithm !== "scrypt" || !salt || !expected) return false;
-  const actual = scryptSync(password, salt, 64);
-  const expectedBuffer = Buffer.from(expected, "hex");
-  return actual.length === expectedBuffer.length && timingSafeEqual(actual, expectedBuffer);
 }
 
 function userFromRow(row: Record<string, unknown>) : DatabaseUser {
@@ -70,19 +64,38 @@ function userFromRow(row: Record<string, unknown>) : DatabaseUser {
     phone: row.phone as string,
     role: row.role as DatabaseUser["role"],
     passwordHash: row.password_hash as string | null,
+    active: row.is_active !== false,
+    sessionVersion: Number(row.session_version ?? 0),
   };
 }
 
 export async function getUserById(id: string) {
-  const [row] = await getDb()`SELECT id,name,email,phone,role,password_hash FROM users WHERE id=${id}`;
+  const [row] = await getDb()`SELECT id,name,email,phone,role,password_hash,is_active,session_version FROM users WHERE id=${id}`;
   return row ? userFromRow(row) : null;
 }
 
 export async function authenticateCustomer(email: string, password: string) {
-  const [row] = await getDb()`SELECT id,name,email,phone,role,password_hash FROM users WHERE email=${email.trim().toLowerCase()} AND role='customer' AND password_hash IS NOT NULL`;
+  const [row] = await getDb()`SELECT id,name,email,phone,role,password_hash,is_active,session_version FROM users WHERE email=${email.trim().toLowerCase()} AND role='customer' AND is_active AND password_hash IS NOT NULL`;
   if (!row) return null;
   const user = userFromRow(row);
   return verifyPassword(password, user.passwordHash) ? user : null;
+}
+
+export async function getCustomerSessionState(id: string) {
+  const [row] = await getDb()`
+    SELECT id,name,email,phone,role,is_active,session_version
+    FROM users WHERE id=${id} AND role='customer'
+  `;
+  if (!row) return null;
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    email: row.email as string,
+    phone: row.phone as string,
+    role: row.role as DatabaseUser["role"],
+    active: row.is_active as boolean,
+    sessionVersion: Number(row.session_version),
+  };
 }
 
 export async function registerCustomer(input: { name: string; email: string; phone: string; password: string }) {
@@ -92,7 +105,7 @@ export async function registerCustomer(input: { name: string; email: string; pho
     INSERT INTO users (id,name,email,phone,password_hash,role)
     VALUES (${id},${input.name.trim()},${input.email.trim().toLowerCase()},${input.phone.trim()},${passwordHash},'customer')
     ON CONFLICT (email) DO NOTHING
-    RETURNING id,name,email,phone,role,password_hash
+    RETURNING id,name,email,phone,role,password_hash,is_active,session_version
   `;
   return row ? userFromRow(row) : null;
 }
@@ -100,8 +113,8 @@ export async function registerCustomer(input: { name: string; email: string; pho
 export async function updateCustomerProfile(id: string, input: { name: string; email: string; phone: string }) {
   const [row] = await getDb()`
     UPDATE users SET name=${input.name.trim()},email=${input.email.trim().toLowerCase()},phone=${input.phone.trim()},updated_at=now()
-    WHERE id=${id} AND role='customer'
-    RETURNING id,name,email,phone,role,password_hash
+    WHERE id=${id} AND role='customer' AND is_active
+    RETURNING id,name,email,phone,role,password_hash,is_active,session_version
   `;
   return row ? userFromRow(row) : null;
 }

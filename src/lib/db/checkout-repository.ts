@@ -79,6 +79,21 @@ export async function createCheckoutOrder(input: CreateOrderInput, session: Cust
     if (input.paymentMethod !== "cod" && !customer) {
       throw new CheckoutError("Sign in to use online payment. Guest checkout remains available with Cash on Delivery.", 401);
     }
+    if (input.paymentMethod !== "cod") {
+      const settingKey = input.paymentMethod === "bkash" ? "bkashNumber" : "nagadNumber";
+      const [settings] = await tx`
+        SELECT value ->> ${settingKey} AS payment_number
+        FROM business_settings
+        WHERE key='store'
+        LIMIT 1
+      `;
+      const paymentNumber = typeof settings?.payment_number === "string"
+        ? settings.payment_number.replace(/[\s-]/g, "")
+        : "";
+      if (!/^(?:\+?880|0)1[3-9]\d{8}$/.test(paymentNumber)) {
+        throw new CheckoutError("This payment method is not configured. Please choose Cash on Delivery or contact Haatly support.", 400);
+      }
+    }
 
     const quantities = new Map<string, number>();
     for (const item of input.items) {
@@ -92,7 +107,7 @@ export async function createCheckoutOrder(input: CreateOrderInput, session: Cust
         p.seller_id,s.name AS seller_name,s.commission_rate,s.handover_days
       FROM products p
       JOIN sellers s ON s.id=p.seller_id
-      WHERE p.id IN ${tx(productIds)}
+      WHERE p.id IN ${tx(productIds)} AND s.active
       FOR UPDATE OF p
     `;
     if (rows.length !== productIds.length) throw new CheckoutError("One or more products are no longer available.", 409);

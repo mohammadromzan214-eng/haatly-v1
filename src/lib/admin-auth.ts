@@ -1,4 +1,5 @@
 import "server-only";
+import type { AdminLoginIdentity, AdminSession } from "./admin-types";
 
 const SESSION_COOKIE = "haatly_admin_session";
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
@@ -14,8 +15,9 @@ interface AdminAuthConfiguration {
 }
 
 interface AdminSessionPayload {
-  role: "admin";
+  role: AdminSession["role"];
   sub: string;
+  accountVersion?: number;
   aud: string;
   iat: number;
   exp: number;
@@ -111,12 +113,11 @@ export function adminCredentialsMatch(email: string, password: string) {
   return emailMatches && passwordMatches;
 }
 
-export async function createAdminSession() {
+export async function createAdminSession(identity: AdminLoginIdentity) {
   const configuration = getAdminAuthConfiguration();
   const issuedAt = Date.now();
   const payload = base64UrlEncode(textEncode(JSON.stringify({
-    role: "admin",
-    sub: configuration.email,
+    ...identity,
     aud: SESSION_AUDIENCE,
     iat: issuedAt,
     exp: issuedAt + SESSION_TTL_SECONDS * 1000,
@@ -124,30 +125,36 @@ export async function createAdminSession() {
   return `${payload}.${await signPayload(payload, configuration.secret)}`;
 }
 
-export async function verifyAdminSession(token: string | undefined) {
-  if (!token || token.length > MAX_SESSION_TOKEN_LENGTH) return false;
+export async function verifyAdminSession(token: string | undefined): Promise<AdminSession | null> {
+  if (!token || token.length > MAX_SESSION_TOKEN_LENGTH) return null;
 
   let configuration: AdminAuthConfiguration;
   try {
     configuration = getAdminAuthConfiguration();
   } catch (error) {
-    if (error instanceof AdminAuthConfigurationError) return false;
+    if (error instanceof AdminAuthConfigurationError) return null;
     throw error;
   }
 
   const parts = token.split(".");
-  if (parts.length !== 2) return false;
+  if (parts.length !== 2) return null;
   const [payload, signature] = parts;
-  if (!payload || !signature) return false;
+  if (!payload || !signature) return null;
 
   const expectedSignature = await signPayload(payload, configuration.secret);
-  if (!constantTimeEqual(signature, expectedSignature)) return false;
+  if (!constantTimeEqual(signature, expectedSignature)) return null;
 
   try {
     const decoded = JSON.parse(new TextDecoder().decode(base64UrlDecode(payload))) as Partial<AdminSessionPayload>;
     const now = Date.now();
-    return decoded.role === "admin"
-      && decoded.sub === configuration.email
+    const validIdentity = decoded.role === "super_admin"
+      ? decoded.sub === configuration.email && decoded.accountVersion === undefined
+      : decoded.role === "order_admin"
+        && typeof decoded.sub === "string"
+        && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(decoded.sub)
+        && Number.isInteger(decoded.accountVersion)
+        && (decoded.accountVersion ?? -1) >= 0;
+    const validSession = validIdentity
       && decoded.aud === SESSION_AUDIENCE
       && typeof decoded.iat === "number"
       && Number.isFinite(decoded.iat)
@@ -156,7 +163,15 @@ export async function verifyAdminSession(token: string | undefined) {
       && Number.isFinite(decoded.exp)
       && decoded.exp > now
       && decoded.exp - decoded.iat <= SESSION_TTL_SECONDS * 1000;
+    if (!validSession || (decoded.role !== "super_admin" && decoded.role !== "order_admin")) return null;
+    return {
+      role: decoded.role,
+      sub: decoded.sub as string,
+      ...(decoded.role === "order_admin" ? { accountVersion: decoded.accountVersion as number } : {}),
+      iat: decoded.iat as number,
+      exp: decoded.exp as number,
+    };
   } catch {
-    return false;
+    return null;
   }
 }

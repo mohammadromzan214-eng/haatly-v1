@@ -88,7 +88,9 @@ export const ORDER_FLOW = [
   "delivered",
 ] as const;
 
-export type OrderStatus = (typeof ORDER_FLOW)[number];
+export const ORDER_STATUSES = [...ORDER_FLOW, "cancelled"] as const;
+
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "Pending",
@@ -98,6 +100,7 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   shipped: "Shipped",
   out_for_delivery: "Out for Delivery",
   delivered: "Delivered",
+  cancelled: "Cancelled",
 };
 
 export interface OrderEvent {
@@ -129,6 +132,18 @@ export interface Order {
   courier: string;
   shipTo: { name: string; area: string; city: string };
   timeline: OrderEvent[];
+}
+
+export function orderProgressIndex(order: Pick<Order, "status" | "timeline">) {
+  if (order.status !== "cancelled") return ORDER_FLOW.indexOf(order.status);
+  const lastProgressEvent = [...order.timeline].reverse().find((event) => event.status !== "cancelled");
+  return lastProgressEvent && lastProgressEvent.status !== "cancelled"
+    ? ORDER_FLOW.indexOf(lastProgressEvent.status)
+    : 0;
+}
+
+export function orderProgressPercent(order: Pick<Order, "status" | "timeline">) {
+  return (orderProgressIndex(order) + 1) / ORDER_FLOW.length;
 }
 
 export interface OrderAddress {

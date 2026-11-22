@@ -1,13 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { getCustomerSessionCookieName, verifyCustomerSession } from "@/lib/customer-auth";
+import { customerSessionUnavailableResponse, verifyActiveCustomerRequest } from "@/lib/customer-access";
 import { deleteCustomerAddress, getCustomerAddresses, saveCustomerAddress } from "@/lib/db/customer-repository";
 import type { CustomerAddress } from "@/components/CustomerAuthProvider";
-
-async function customerId(request: NextRequest) {
-  const session = await verifyCustomerSession(request.cookies.get(getCustomerSessionCookieName())?.value);
-  return session?.id ?? null;
-}
 
 function validAddress(value: Partial<CustomerAddress>) {
   return typeof value.label === "string" && value.label.trim().length > 0
@@ -19,7 +14,9 @@ function validAddress(value: Partial<CustomerAddress>) {
 }
 
 export async function GET(request: NextRequest) {
-  const id = await customerId(request);
+  const check = await verifyActiveCustomerRequest(request);
+  if (check.status === "unavailable") return customerSessionUnavailableResponse();
+  const id = check.status === "authenticated" ? check.customer.id : null;
   if (!id) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   try {
     return NextResponse.json({ addresses: await getCustomerAddresses(id) }, { headers: { "Cache-Control": "no-store" } });
@@ -30,7 +27,9 @@ export async function GET(request: NextRequest) {
 }
 
 async function writeAddress(request: NextRequest, editing: boolean) {
-  const userId = await customerId(request);
+  const check = await verifyActiveCustomerRequest(request);
+  if (check.status === "unavailable") return customerSessionUnavailableResponse();
+  const userId = check.status === "authenticated" ? check.customer.id : null;
   if (!userId) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   let body: Partial<CustomerAddress>;
   try {
@@ -72,7 +71,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const id = await customerId(request);
+  const check = await verifyActiveCustomerRequest(request);
+  if (check.status === "unavailable") return customerSessionUnavailableResponse();
+  const id = check.status === "authenticated" ? check.customer.id : null;
   if (!id) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   const addressId = request.nextUrl.searchParams.get("id");
   if (!addressId) return NextResponse.json({ error: "Address id is required." }, { status: 400 });

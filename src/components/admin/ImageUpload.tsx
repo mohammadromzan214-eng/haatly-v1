@@ -12,7 +12,7 @@ export function ImageUpload({ value, onChange, label = "Image" }: { value: strin
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      setError("Mock image uploads must be 2 MB or smaller.");
+      setError("Image files must be 2 MB or smaller.");
       return;
     }
     const reader = new FileReader();
@@ -31,7 +31,7 @@ export function ImageUpload({ value, onChange, label = "Image" }: { value: strin
       <input type="file" accept="image/*" onChange={(event) => choose(event.target.files?.[0])} className="mt-2 block w-full text-sm font-normal" />
       {value && <img src={value} alt={`${label} preview`} className="mt-3 size-20 rounded-xl object-cover" />}
       {error && <span role="alert" className="mt-1 block text-xs text-clay">{error}</span>}
-      <span className="mt-1 block text-xs font-normal text-muted">Local mock upload, maximum 2 MB.</span>
+      <span className="mt-1 block text-xs font-normal text-muted">Selected image is stored with this record; maximum 2 MB.</span>
     </label>
   );
 }

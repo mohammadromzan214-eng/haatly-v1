@@ -7,7 +7,7 @@ export function toCartItem(p: Product, seller: Product["seller"] = p.seller): Om
     productId: p.id,
     slug: p.slug,
     title: p.title,
-    image: p.images[0],
+    image: p.images[0] ?? "/placeholder.png",
     price: p.price,
     sellerId: p.sellerId,
     sellerName: seller?.name ?? p.seller?.name ?? "Haatly Retail",

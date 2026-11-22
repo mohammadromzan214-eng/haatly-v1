@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCustomerSessionCookieName, verifyCustomerSession } from "@/lib/customer-auth";
-import { getUserById, toSession, updateCustomerProfile } from "@/lib/db/customer-repository";
+import { customerSessionUnavailableResponse, verifyActiveCustomerRequest } from "@/lib/customer-access";
+import { toSession, updateCustomerProfile } from "@/lib/db/customer-repository";
 
 export async function PATCH(request: NextRequest) {
-  const session = await verifyCustomerSession(request.cookies.get(getCustomerSessionCookieName())?.value);
+  const check = await verifyActiveCustomerRequest(request);
+  if (check.status === "unavailable") return customerSessionUnavailableResponse();
+  const session = check.status === "authenticated" ? check.customer : null;
   if (!session) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
   let body: { name?: unknown; email?: unknown; phone?: unknown };

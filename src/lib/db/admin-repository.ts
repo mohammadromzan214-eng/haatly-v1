@@ -1,28 +1,33 @@
-import type { Category, Product, Seller } from "@/lib/types";
+import type { Category, Product } from "@/lib/types";
 import { getDb } from "./client";
-import type { AdminBanner, AdminContent, AdminContentKey, AdminCoupon, AdminProduct, AdminSettings } from "@/components/admin/AdminDataProvider";
+import type { AdminBanner, AdminContent, AdminContentKey, AdminCoupon, AdminProduct, AdminSeller, AdminSettings } from "@/components/admin/AdminDataProvider";
 
 export interface AdminSnapshot {
   products: AdminProduct[];
   categories: Category[];
-  sellers: Seller[];
+  sellers: AdminSeller[];
   coupons: AdminCoupon[];
   banners: AdminBanner[];
   settings: AdminSettings;
   content: AdminContent;
 }
 
+export class AdminSettingsValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AdminSettingsValidationError";
+  }
+}
+
 export async function readAdminSnapshot(): Promise<AdminSnapshot> {
   const sql = getDb();
-  const [productRows, categories, sellerRows, couponRows, banners, settingRows, contentRows] = await Promise.all([
-    sql`SELECT * FROM products ORDER BY created_at DESC, title`,
-    sql`SELECT slug, name, blurb, image, parent_slug AS "parentSlug" FROM categories ORDER BY name`,
-    sql`SELECT id,slug,name,kind,area,city,commission_rate AS "commissionRate",rating,handover_days AS "handoverDays" FROM sellers ORDER BY name`,
-    sql`SELECT id, code, label, percent_off AS "percentOff", max_discount AS "maxDiscount", expires_at AS "expiresAt", active FROM coupons ORDER BY code`,
-    sql`SELECT id, title, placement, image, active FROM banners ORDER BY sort_order, title`,
-    sql`SELECT value FROM business_settings WHERE key = 'store'`,
-    sql`SELECT slug, body FROM content_pages`,
-  ]);
+  const productRows = await sql`SELECT * FROM products ORDER BY created_at DESC, title`;
+  const categories = await sql`SELECT slug, name, blurb, image, parent_slug AS "parentSlug" FROM categories ORDER BY name`;
+  const sellerRows = await sql`SELECT id,slug,name,kind,area,city,commission_rate AS "commissionRate",rating,handover_days AS "handoverDays",active FROM sellers ORDER BY name`;
+  const couponRows = await sql`SELECT id, code, label, percent_off AS "percentOff", max_discount AS "maxDiscount", expires_at AS "expiresAt", active FROM coupons ORDER BY code`;
+  const banners = await sql`SELECT id, title, placement, image, active FROM banners ORDER BY sort_order, title`;
+  const settingRows = await sql`SELECT value FROM business_settings WHERE key = 'store'`;
+  const contentRows = await sql`SELECT slug, body FROM content_pages`;
   const products: AdminProduct[] = productRows.map((row) => ({
     id: row.id,
     slug: row.slug,
@@ -73,6 +78,7 @@ export async function readAdminSnapshot(): Promise<AdminSnapshot> {
       commissionRate: Number(row.commissionRate),
       rating: Number(row.rating),
       handoverDays: row.handoverDays,
+      active: row.active,
     })),
     categories: categories.map((row) => ({
       slug: row.slug,
@@ -93,6 +99,9 @@ export async function readAdminSnapshot(): Promise<AdminSnapshot> {
       storeName: typeof settingsValue?.storeName === "string" ? settingsValue.storeName : "Haatly",
       phone: typeof settingsValue?.phone === "string" ? settingsValue.phone : "",
       whatsapp: typeof settingsValue?.whatsapp === "string" ? settingsValue.whatsapp : "",
+      announcement: typeof settingsValue?.announcement === "string" ? settingsValue.announcement : "",
+      bkashNumber: typeof settingsValue?.bkashNumber === "string" ? settingsValue.bkashNumber : "",
+      nagadNumber: typeof settingsValue?.nagadNumber === "string" ? settingsValue.nagadNumber : "",
       email: typeof settingsValue?.email === "string" ? settingsValue.email : "",
       facebook: typeof settingsValue?.facebook === "string" ? settingsValue.facebook : "",
       instagram: typeof settingsValue?.instagram === "string" ? settingsValue.instagram : "",
@@ -157,6 +166,16 @@ export async function writeAdminMutation(input: {
   }
 
   if (entity === "settings") {
+    const announcement = typeof data.announcement === "string" ? data.announcement : "";
+    const bkashNumber = typeof data.bkashNumber === "string" ? data.bkashNumber.trim() : "";
+    const nagadNumber = typeof data.nagadNumber === "string" ? data.nagadNumber.trim() : "";
+    if (announcement.length > 240) throw new AdminSettingsValidationError("Storefront notice must be 240 characters or fewer.");
+    for (const [label, number] of [["bKash", bkashNumber], ["Nagad", nagadNumber]] as const) {
+      const normalized = number.replace(/[\s-]/g, "");
+      if (normalized && !/^(?:\+?880|0)1[3-9]\d{8}$/.test(normalized)) {
+        throw new AdminSettingsValidationError(`Enter a valid Bangladesh mobile number for ${label}.`);
+      }
+    }
     return sql`INSERT INTO business_settings (key,value) VALUES ('store',${sql.json(data)}) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()`;
   }
 

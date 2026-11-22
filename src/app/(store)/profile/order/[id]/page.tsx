@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, CalendarDays, Check, CreditCard, MapPin, Package, Truck } from "lucide-react";
-import { getCustomerSessionCookieName, verifyCustomerSession } from "@/lib/customer-auth";
+import { ArrowLeft, CalendarDays, Check, CreditCard, MapPin, Package, Truck, X } from "lucide-react";
+import { getCustomerSessionCookieName } from "@/lib/customer-auth";
+import { verifyActiveCustomerSession } from "@/lib/customer-access";
 import { getCustomerOrderDetails } from "@/lib/db/order-repository";
 import { cdn } from "@/lib/image";
 import { formatPrice } from "@/lib/site";
-import { ORDER_FLOW, ORDER_STATUS_LABEL, paymentMethodLabel, type OrderAddress, type OrderDetails, type OrderStatus } from "@/lib/types";
+import { ORDER_FLOW, ORDER_STATUS_LABEL, orderProgressIndex, paymentMethodLabel, type OrderAddress, type OrderDetails, type OrderStatus } from "@/lib/types";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -26,12 +27,14 @@ function AddressDetails({ address }: { address: OrderAddress }) {
 }
 
 function OrderDetailView({ order }: { order: OrderDetails }) {
-  const currentIndex = ORDER_FLOW.indexOf(order.status);
+  const currentIndex = orderProgressIndex(order);
   const eventsByStatus = new Map<OrderStatus, (typeof order.timeline)[number]>();
   for (const event of order.timeline) eventsByStatus.set(event.status, event);
 
   const orderStatusClass = order.status === "delivered"
     ? "bg-forest/10 text-forest"
+    : order.status === "cancelled"
+      ? "bg-clay/10 text-clay"
     : "bg-marigold/20 text-ink";
   const paymentStatusClass = order.payment.status === "paid"
     ? "bg-forest/10 text-forest"
@@ -54,6 +57,12 @@ function OrderDetailView({ order }: { order: OrderDetails }) {
           {ORDER_STATUS_LABEL[order.status]}
         </span>
       </header>
+
+      {order.status === "cancelled" && (
+        <p role="status" className="mt-5 rounded-2xl bg-clay/10 px-4 py-3 text-sm text-clay">
+          This order was cancelled. Cancellation does not automatically refund a payment; contact Haatly support about any pending or paid payment.
+        </p>
+      )}
 
       <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-6">
@@ -100,7 +109,7 @@ function OrderDetailView({ order }: { order: OrderDetails }) {
               {ORDER_FLOW.map((status, index) => {
                 const event = eventsByStatus.get(status);
                 const reached = Boolean(event) || index <= currentIndex;
-                const next = index === currentIndex + 1;
+                const next = order.status !== "cancelled" && index === currentIndex + 1;
                 return (
                   <li key={status} className="relative pb-7 last:pb-0">
                     <span className={`absolute -left-[36px] top-0.5 grid size-5 place-items-center rounded-full ${reached ? "bg-forest" : "border-2 border-line bg-paper"}`}>
@@ -116,6 +125,18 @@ function OrderDetailView({ order }: { order: OrderDetails }) {
                   </li>
                 );
               })}
+              {order.status === "cancelled" && (
+                <li className="relative pb-7 last:pb-0">
+                  <span className="absolute -left-[36px] top-0.5 grid size-5 place-items-center rounded-full bg-clay">
+                    <X className="size-3 text-paper" strokeWidth={3} />
+                  </span>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="font-semibold text-clay">{ORDER_STATUS_LABEL.cancelled}</p>
+                    {eventsByStatus.get("cancelled") && <time className="font-mono text-xs text-muted">{formatDate(eventsByStatus.get("cancelled")!.at)}</time>}
+                  </div>
+                  <p className="mt-1 text-sm text-ink-soft">{eventsByStatus.get("cancelled")?.note ?? "This order was cancelled."}</p>
+                </li>
+              )}
             </ol>
           </section>
         </div>
@@ -167,7 +188,21 @@ export default async function ProfileOrderPage({ params }: { params: Promise<{ i
   if (!id || id.length > 128) notFound();
 
   const cookieStore = await cookies();
-  const customer = await verifyCustomerSession(cookieStore.get(getCustomerSessionCookieName())?.value);
+  let customer;
+  try {
+    customer = await verifyActiveCustomerSession(cookieStore.get(getCustomerSessionCookieName())?.value);
+  } catch (error) {
+    console.error("Could not verify customer access to order details.", error);
+    return (
+      <div role="alert" className="rounded-[26px] border border-clay/30 bg-clay/5 p-6">
+        <h1 className="font-display text-2xl font-bold">Account verification is temporarily unavailable</h1>
+        <p className="mt-2 text-sm text-ink-soft">Please try again later.</p>
+        <Link href="/profile/orders" className="mt-5 inline-flex rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper">
+          Back to my orders
+        </Link>
+      </div>
+    );
+  }
   if (!customer) redirect(`/login?next=${encodeURIComponent(`/profile/order/${id}`)}`);
 
   let order: OrderDetails | null;

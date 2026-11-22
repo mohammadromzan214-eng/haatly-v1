@@ -13,7 +13,7 @@ export async function createPasswordResetToken(input: {
     const [user] = await tx`
       SELECT id,email
       FROM users
-      WHERE lower(email)=${input.email.trim().toLowerCase()} AND role='customer'
+      WHERE lower(email)=${input.email.trim().toLowerCase()} AND role='customer' AND is_active
       LIMIT 1
       FOR UPDATE
     `;
@@ -52,8 +52,8 @@ export async function resetCustomerPassword(tokenHash: string, passwordHash: str
 
     const [user] = await tx`
       UPDATE users
-      SET password_hash=${passwordHash},updated_at=now()
-      WHERE id=${token.user_id} AND role='customer'
+      SET password_hash=${passwordHash},session_version=session_version+1,updated_at=now()
+      WHERE id=${token.user_id} AND role='customer' AND is_active
       RETURNING id
     `;
     await tx`

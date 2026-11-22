@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCustomerSessionCookieName, verifyCustomerSession } from "@/lib/customer-auth";
+import { customerSessionUnavailableResponse, verifyActiveCustomerRequest } from "@/lib/customer-access";
 import { claimCheckoutReceipt } from "@/lib/db/checkout-repository";
 
 export async function POST(request: NextRequest) {
-  const customer = await verifyCustomerSession(request.cookies.get(getCustomerSessionCookieName())?.value);
+  const check = await verifyActiveCustomerRequest(request);
+  if (check.status === "unavailable") return customerSessionUnavailableResponse();
+  const customer = check.status === "authenticated" ? check.customer : null;
   if (!customer) return NextResponse.json({ error: "Sign in to link this order to your account." }, { status: 401 });
 
   let token: unknown;

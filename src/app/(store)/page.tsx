@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarClock, Handshake, MapPin, PackageCheck, Star } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
-import { getBusinessSettings, listActiveBanners, listActiveCoupons, listCategories, listSellers, listStorefrontProducts } from "@/lib/catalog";
+import { getStorefrontChrome, listActiveBanners, listActiveCoupons, listSellers, listStorefrontProducts } from "@/lib/catalog";
 import { cdn } from "@/lib/image";
 import { ORDER_FLOW, ORDER_STATUS_LABEL } from "@/lib/types";
 import { formatPrice, site } from "@/lib/site";
@@ -9,64 +9,28 @@ import { formatPrice, site } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [products, categories, sellers, banners, coupons, settings] = await Promise.all([
+  const [products, sellers, banners, coupons, storefrontChrome] = await Promise.all([
     listStorefrontProducts(),
-    listCategories(),
     listSellers(),
     listActiveBanners(),
     listActiveCoupons(),
-    getBusinessSettings(),
+    getStorefrontChrome(),
   ]);
+
+  const { categories, settings } = storefrontChrome;
+  const heroBanner = banners.find((banner) => banner.placement === "Hero") ?? banners.find((banner) => banner.placement === "Slider");
+  const secondaryBanners = banners.filter((banner) => banner.id !== heroBanner?.id);
+
   const bestsellers = [...products].filter((p) => p.status === "active").sort((a, b) => b.soldCount - a.soldCount).slice(0, 4);
   const fresh = [...products].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4);
   const [hero, ...restCats] = categories;
   const partners = sellers.filter((s) => s.kind === "partner");
-  const heroBanner = banners.find((banner) => banner.placement === "Hero") ?? banners.find((banner) => banner.placement === "Slider");
-  const secondaryBanners = banners.filter((banner) => banner.id !== heroBanner?.id);
   const coupon = coupons[0];
 
   return (
     <main>
-      {/* ------------------------------------------------------------ Hero */}
-      <section className="relative isolate overflow-hidden bg-clay">
-        <picture>
-          <source media="(min-width: 1024px)" srcSet={cdn(heroBanner?.image ?? "/img/hero.png", 1920, 1080)} />
-          <img
-            src={cdn(heroBanner?.image ?? "/img/hero.png", 1100, 1100)}
-            alt="Jamdani saree, earbuds, estate tea and leather sandals laid out on a terracotta cloth"
-            className="absolute inset-0 -z-10 h-full w-full object-cover object-[70%_center] opacity-50 lg:opacity-100"
-            fetchPriority="high"
-          />
-        </picture>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-clay via-clay/80 to-transparent lg:via-clay/30" />
-        <div className="mx-auto grid min-h-[78vh] max-w-7xl items-center px-5 py-20 lg:grid-cols-[1.1fr_1fr]">
-          <div className="text-paper">
-            <p className="animate-rise font-mono text-xs uppercase tracking-[0.3em] text-marigold-soft">Online haat · Est. Dhaka</p>
-            <h1 className="animate-rise mt-5 font-display text-[clamp(3rem,7.5vw,6.5rem)] font-extrabold leading-[0.88] tracking-[-0.035em] [animation-delay:80ms]">
-              The whole haat,
-              <br />
-              <span className="italic text-marigold-soft">one tap</span> away.
-            </h1>
-            <p className="animate-rise mt-7 max-w-md text-lg leading-relaxed text-paper/85 [animation-delay:160ms]">
-              Warehouse-fresh essentials, handpicked partner stalls from Rupganj to Jashore, and early pre-orders — delivered to all 64 districts.
-            </p>
-            <div className="animate-rise mt-9 flex flex-wrap gap-3 [animation-delay:240ms]">
-              <Link href="/products" className="group inline-flex h-14 items-center gap-2 rounded-full bg-paper px-7 font-semibold text-ink transition hover:bg-marigold-soft">
-                Shop the haat
-                <ArrowRight className="size-5 transition group-hover:translate-x-1" />
-              </Link>
-              <Link href="/track-order" className="inline-flex h-14 items-center rounded-full border border-paper/40 px-7 font-semibold text-paper transition hover:bg-paper/10">
-                Track an order
-              </Link>
-            </div>
-            <dl className="animate-rise mt-14 grid max-w-md grid-cols-3 gap-6 border-t border-paper/25 pt-6 [animation-delay:320ms]">
-              <div><dt className="text-xs text-paper/70">Parcels in Nov</dt><dd className="font-display text-2xl font-bold">12,438</dd></div>
-              <div><dt className="text-xs text-paper/70">Partner stalls</dt><dd className="font-display text-2xl font-bold">41</dd></div>
-              <div><dt className="text-xs text-paper/70">Avg. rating</dt><dd className="flex items-center gap-1 font-display text-2xl font-bold">4.7<Star className="size-4 fill-marigold text-marigold" /></dd></div>
-            </dl>
-          </div>
-        </div>
-      </section>
+      {/* ------------------------------------------------------ Hero */}
+      <HomeHero image={heroBanner?.image ?? "/img/hero.png"} />
 
       {secondaryBanners.length > 0 && (
         <section className="mx-auto mt-10 grid max-w-7xl gap-4 px-5 sm:grid-cols-2">
@@ -81,34 +45,36 @@ export default async function HomePage() {
       )}
 
       {/* ------------------------------------------------------ Categories */}
-      {hero && <section className="mx-auto max-w-7xl px-5 pt-20">
-        <div className="flex items-end justify-between gap-6">
-          <h2 className="max-w-xl font-display text-4xl font-bold leading-[0.95] tracking-tight md:text-5xl">Walk the aisles.</h2>
-          <Link href="/products" className="hidden items-center gap-1 text-sm font-semibold hover:text-clay sm:inline-flex">
-            All products <ArrowUpRight className="size-4" />
-          </Link>
-        </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-4 md:grid-rows-2">
-          <Link href={`/products/category/${hero.slug}`} className="group relative overflow-hidden rounded-[28px] bg-paper-2 md:col-span-2 md:row-span-2">
-            <img src={cdn(hero.image, 900, 900)} alt="" className="aspect-square h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/80 to-transparent p-7 pt-24 text-paper">
-              <p className="font-mono text-xs uppercase tracking-widest text-marigold-soft">01</p>
-              <h3 className="mt-1 font-display text-3xl font-bold">{hero.name}</h3>
-              <p className="text-sm text-paper/80">{hero.blurb}</p>
-            </div>
-          </Link>
-          {restCats.slice(0, 4).map((c, i) => (
-            <Link key={c.slug} href={`/products/category/${c.slug}`} className="group relative flex items-end overflow-hidden rounded-[28px] bg-paper-2 p-5">
-              <img src={cdn(c.image, 480, 480)} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/5 to-transparent" />
-              <div className="relative mt-32 text-paper">
-                <p className="font-mono text-[11px] uppercase tracking-widest text-marigold-soft">0{i + 2}</p>
-                <h3 className="font-display text-xl font-bold">{c.name}</h3>
+      {hero && (
+        <section className="mx-auto max-w-7xl px-5 pt-20">
+          <div className="flex items-end justify-between gap-6">
+            <h2 className="max-w-xl font-display text-4xl font-bold leading-[0.95] tracking-tight md:text-5xl">Walk the aisles.</h2>
+            <Link href="/products" className="hidden items-center gap-1 text-sm font-semibold hover:text-clay sm:inline-flex">
+              All products <ArrowUpRight className="size-4" />
+            </Link>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-4 md:grid-rows-2">
+            <Link href={`/products/category/${hero.slug}`} className="group relative overflow-hidden rounded-[28px] bg-paper-2 md:col-span-2 md:row-span-2">
+              <img src={cdn(hero.image, 900, 900)} alt="" className="aspect-square h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/80 to-transparent p-7 pt-24 text-paper">
+                <p className="font-mono text-xs uppercase tracking-widest text-marigold-soft">01</p>
+                <h3 className="mt-1 font-display text-3xl font-bold">{hero.name}</h3>
+                <p className="text-sm text-paper/80">{hero.blurb}</p>
               </div>
             </Link>
-          ))}
-        </div>
-      </section>}
+            {restCats.slice(0, 4).map((c, i) => (
+              <Link key={c.slug} href={`/products/category/${c.slug}`} className="group relative flex items-end overflow-hidden rounded-[28px] bg-paper-2 p-5">
+                <img src={cdn(c.image, 480, 480)} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/5 to-transparent" />
+                <div className="relative mt-32 text-paper">
+                  <p className="font-mono text-[11px] uppercase tracking-widest text-marigold-soft">0{i + 2}</p>
+                  <h3 className="font-display text-xl font-bold">{c.name}</h3>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* -------------------------------------------- How we stock (badges) */}
       <section className="mx-auto mt-24 max-w-7xl px-5">
@@ -154,27 +120,29 @@ export default async function HomePage() {
       </section>
 
       {/* ------------------------------------------------------- Offer band */}
-      {coupon && <section className="mx-auto mt-28 max-w-7xl px-5">
-        <div className="relative overflow-hidden rounded-[32px] bg-marigold px-8 py-12 md:px-14">
-          <div className="stitch absolute inset-x-8 top-5 text-ink/25" />
-          <div className="stitch absolute inset-x-8 bottom-5 text-ink/25" />
-          <div className="grid items-center gap-8 md:grid-cols-[1.5fr_1fr]">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.3em] text-ink/70">First order</p>
-              <h2 className="mt-3 font-display text-4xl font-extrabold leading-[0.95] tracking-tight md:text-6xl">
-                Take {coupon.percentOff}% off, up to {formatPrice(coupon.maxDiscount)}.
-              </h2>
-              <p className="mt-4 max-w-md text-ink/75">Apply the code in your bag. Works on own-stock, partner and pre-order items alike.</p>
-            </div>
-            <div className="justify-self-start md:justify-self-end">
-              <div className="rotate-[-3deg] rounded-2xl border-2 border-dashed border-ink bg-paper px-8 py-6 text-center shadow-[8px_8px_0_0_var(--color-ink)]">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted">Use code</p>
-                <p className="mt-1 font-mono text-4xl font-bold tracking-wider">{coupon.code}</p>
+      {coupon && (
+        <section className="mx-auto mt-28 max-w-7xl px-5">
+          <div className="relative overflow-hidden rounded-[32px] bg-marigold px-8 py-12 md:px-14">
+            <div className="stitch absolute inset-x-8 top-5 text-ink/25" />
+            <div className="stitch absolute inset-x-8 bottom-5 text-ink/25" />
+            <div className="grid items-center gap-8 md:grid-cols-[1.5fr_1fr]">
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.3em] text-ink/70">First order</p>
+                <h2 className="mt-3 font-display text-4xl font-extrabold leading-[0.95] tracking-tight md:text-6xl">
+                  Take {coupon.percentOff}% off, up to {formatPrice(coupon.maxDiscount)}.
+                </h2>
+                <p className="mt-4 max-w-md text-ink/75">Apply the code in your bag. Works on own-stock, partner and pre-order items alike.</p>
+              </div>
+              <div className="justify-self-start md:justify-self-end">
+                <div className="rotate-[-3deg] rounded-2xl border-2 border-dashed border-ink bg-paper px-8 py-6 text-center shadow-[8px_8px_0_0_var(--color-ink)]">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted">Use code</p>
+                  <p className="mt-1 font-mono text-4xl font-bold tracking-wider">{coupon.code}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>}
+        </section>
+      )}
 
       {/* ------------------------------------------------------ Fresh in */}
       <section className="mx-auto mt-28 max-w-7xl px-5">
@@ -237,5 +205,49 @@ export default async function HomePage() {
 
       <p className="sr-only">{settings.storeName} — {site.description}</p>
     </main>
+  );
+}
+
+function HomeHero({ image }: { image: string }) {
+  return (
+    <section className="relative isolate overflow-hidden bg-clay">
+      <picture>
+        <source media="(min-width: 1024px)" srcSet={cdn(image, 1920, 1080)} />
+        <img
+          src={cdn(image, 1100, 1100)}
+          alt="Jamdani saree, earbuds, estate tea and leather sandals laid out on a terracotta cloth"
+          className="absolute inset-0 -z-10 h-full w-full object-cover object-[70%_center] opacity-50 lg:opacity-100"
+          fetchPriority="high"
+        />
+      </picture>
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-clay via-clay/80 to-transparent lg:via-clay/30" />
+      <div className="mx-auto grid min-h-[78vh] max-w-7xl items-center px-5 py-20 lg:grid-cols-[1.1fr_1fr]">
+        <div className="text-paper">
+          <p className="animate-rise font-mono text-xs uppercase tracking-[0.3em] text-marigold-soft">Online haat · Est. Dhaka</p>
+          <h1 className="animate-rise mt-5 font-display text-[clamp(3rem,7.5vw,6.5rem)] font-extrabold leading-[0.88] tracking-[-0.035em] [animation-delay:80ms]">
+            The whole haat,
+            <br />
+            <span className="italic text-marigold-soft">one tap</span> away.
+          </h1>
+          <p className="animate-rise mt-7 max-w-md text-lg leading-relaxed text-paper/85 [animation-delay:160ms]">
+            Warehouse-fresh essentials, handpicked partner stalls from Rupganj to Jashore, and early pre-orders — delivered to all 64 districts.
+          </p>
+          <div className="animate-rise mt-9 flex flex-wrap gap-3 [animation-delay:240ms]">
+            <Link href="/products" className="group inline-flex h-14 items-center gap-2 rounded-full bg-paper px-7 font-semibold text-ink transition hover:bg-marigold-soft">
+              Shop the haat
+              <ArrowRight className="size-5 transition group-hover:translate-x-1" />
+            </Link>
+            <Link href="/track-order" className="inline-flex h-14 items-center rounded-full border border-paper/40 px-7 font-semibold text-paper transition hover:bg-paper/10">
+              Track an order
+            </Link>
+          </div>
+          <dl className="animate-rise mt-14 grid max-w-md grid-cols-3 gap-6 border-t border-paper/25 pt-6 [animation-delay:320ms]">
+            <div><dt className="text-xs text-paper/70">Parcels in Nov</dt><dd className="font-display text-2xl font-bold">12,438</dd></div>
+            <div><dt className="text-xs text-paper/70">Partner stalls</dt><dd className="font-display text-2xl font-bold">41</dd></div>
+            <div><dt className="text-xs text-paper/70">Avg. rating</dt><dd className="flex items-center gap-1 font-display text-2xl font-bold">4.7<Star className="size-4 fill-marigold text-marigold" /></dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
   );
 }
