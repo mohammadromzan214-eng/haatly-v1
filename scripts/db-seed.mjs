@@ -1,6 +1,9 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import nextEnv from "@next/env";
 import postgres from "postgres";
+
+nextEnv.loadEnvConfig(process.cwd());
 
 if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL before running seeds.");
 const sql = postgres(process.env.DATABASE_URL, { prepare: false, ssl: process.env.NODE_ENV === "production" ? "require" : undefined });

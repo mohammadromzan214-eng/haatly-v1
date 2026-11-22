@@ -10,6 +10,7 @@
     "db:seed": "node scripts/db-seed.mjs && tsx scripts/db-seed-fixtures.ts"
   },
   "dependencies": {
+    "@next/env": "^16.4.6",
     "lucide-react": "^1.77.0",
     "next": "^16.4.6",
     "postgres": "^4.1.1",

@@ -16,7 +16,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
     <article className="group relative flex flex-col">
       <Link href={`/products/${product.slug}`} className="relative block overflow-hidden rounded-[22px] bg-paper-2">
         <img
-          src={cdn(product.images[0], 560, 640)}
+          src={cdn(product.images?.[0] || '/placeholder.png', 560, 640)}
           alt={product.title}
           width={560}
           height={640}
