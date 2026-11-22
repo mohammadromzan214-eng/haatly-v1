@@ -1,7 +1,11 @@
 import "server-only";
+import { cache } from "react";
+import {
+  getBusinessSettings as readBusinessSettings,
+  listCategories as readCategories,
+} from "./db/storefront-repository";
 
 export {
-  getBusinessSettings,
   getCategoryBySlug,
   getContentPage,
   getRelatedStorefrontProducts,
@@ -10,9 +14,12 @@ export {
   getStorefrontProductsByIds,
   listActiveBanners,
   listActiveCoupons,
-  listCategories,
   listProductsByCategory,
   listSellers,
   listStorefrontProducts,
 } from "./db/storefront-repository";
+
+export const getBusinessSettings = cache(readBusinessSettings);
+export const listCategories = cache(readCategories);
+
 export { isPurchasable, SOURCE_TYPE_LABEL, stockBadge, STOCK_BADGE_LABEL } from "./catalog-utils";

@@ -1,6 +1,6 @@
 /**
  * STUB DATA — the single source of catalogue, seller and order data for milestone 1.
- * Everything here is replaced by Netlify Database queries in milestone 2 (see PLAN.md).
+ * Everything here is replaced by PostgreSQL queries in milestone 2 (see PLAN.md).
  * Keep the shapes in sync with `types.ts`; pages only read data through `catalog.ts`.
  */
 import type { Category, Order, Product, Seller } from "./types";

@@ -1,13 +1,22 @@
 # Haatly
 
-A Bangladeshi multi-page e-commerce platform built with Next.js (App Router), React 19, Tailwind CSS v4 and Netlify (Image CDN) with PostgreSQL-backed management storage. Customer email auth and Google OIDC are available; admin sign-in requires deployment-configured credentials and a signing secret. Designed to grow from a single-vendor store into a multi-vendor marketplace.
+A Bangladeshi multi-page e-commerce platform built with Next.js (App Router), React 19, Tailwind CSS v4, and PostgreSQL-backed management storage. It runs on any hosting provider that supports a Node.js server; no Netlify runtime or image service is required. Customer email auth and Google OIDC are available; admin sign-in requires deployment-configured credentials and a signing secret. Designed to grow from a single-vendor store into a multi-vendor marketplace.
 
 ## Run locally
 ```
 npm install
-netlify dev --port 8889
+npm run dev
 ```
-(Use `netlify dev` so `/.netlify/images` works.)
+Open `http://localhost:3000`.
+
+## Deploy to a Node.js host
+Use Node.js 20.9 or newer. Configure the required environment variables for your deployment, then run:
+```
+npm ci
+npm run build
+npm run start
+```
+The server listens on port `3000` by default and respects the hosting provider's `PORT` environment variable. This standard Next.js Node.js server can be used on any compatible host; `netlify.toml` is only for optional Netlify deployments.
 
 ## Database setup
 Set `DATABASE_URL` to a PostgreSQL connection string, then run:

@@ -205,7 +205,7 @@ export async function findPublicOrder(code: string, phone: string) {
   const [row] = await sql<OrderRow[]>`
     SELECT code,phone,status,placed_at,delivery_fee,discount,payment_method,payment_status,courier,ship_to
     FROM orders
-    WHERE lower(regexp_replace(code, '[^0-9a-z]', '', 'g'))=${normalisedCode}
+    WHERE regexp_replace(lower(code), '[^0-9a-z]', '', 'g')=${normalisedCode}
       AND right(regexp_replace(phone, '[^0-9]', '', 'g'), 6)=${normalisedPhone.slice(-6)}
     LIMIT 1
   `;

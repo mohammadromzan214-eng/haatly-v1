@@ -1,7 +1,7 @@
 # Haatly — Build Plan
 
 ## 1. Storefront foundation — DONE
-Next.js App Router project, brand system, AI-generated product photography (served via Netlify Image CDN), marketplace-shaped domain types (`src/lib/types.ts`), stub catalogue (`src/lib/fixtures.ts`) behind a read layer (`src/lib/catalog.ts`).
+Next.js App Router project, brand system, AI-generated product photography (served from project image URLs), marketplace-shaped domain types (`src/lib/types.ts`), stub catalogue (`src/lib/fixtures.ts`) behind a read layer (`src/lib/catalog.ts`).
 Live: `/`, `/products`, `/products/[slug]`, `/products/category/[category]`, `/cart` (browser-persisted, grouped by seller, coupon HAAT10), `/track-order` (7-step workflow), `/admin/inventory` (source type, status, stock badge, low-stock rules — client-side only).
 
 ## 2. Database — FOUNDATION IMPLEMENTED
@@ -17,7 +17,7 @@ PostgreSQL schema, migrations, fixture seeds and storage repositories are in pla
 Products list/add/edit/delete, inventory, categories, banners/offers, content pages, coupons, business settings and payment verification use the database storage layer. Public storefront pages now reflect these database-managed products, categories, active banners/coupons, published CMS pages, store contact details, and product-level payment method choices on the next request. Partner-shop management remains admin-only and planned. Admin dashboard metrics, orders/status management and customer management remain.
 
 ## 6. Remaining public pages — TODO
-Database-published `/about`, `/contact`, `/faq`, `/privacy-policy`, `/return-policy`, and `/terms-and-conditions` pages use the shared CMS route. Dedicated `/search`, `/offers`, and `/categories` pages and Netlify Forms for contact remain TODO.
+Database-published `/about`, `/contact`, `/faq`, `/privacy-policy`, `/return-policy`, and `/terms-and-conditions` pages use the shared CMS route. Dedicated `/search`, `/offers`, and `/categories` pages and contact form delivery remain TODO.
 
 ## 7. Marketplace — FUTURE
 Seller registration/dashboard/products/orders, withdraw requests, commission system; public JSON API for Android/iOS apps.

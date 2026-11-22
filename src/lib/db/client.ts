@@ -7,7 +7,7 @@ export function getDb() {
   if (!url) throw new Error("DATABASE_URL must be configured before using database-backed features.");
   if (!globalForPostgres.haatlySql) {
     globalForPostgres.haatlySql = postgres(url, {
-      max: 5,
+      max: 10,
       prepare: false,
       ssl: process.env.NODE_ENV === "production" ? "require" : undefined,
     });
