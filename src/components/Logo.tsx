@@ -10,7 +10,7 @@ export function Logo({ tone = "ink", href = "/", name = site.name }: { tone?: "i
         <path d="M8 19c2.4-6 13.6-6 16 0" className="stroke-paper" strokeWidth="2.4" fill="none" strokeLinecap="round" />
         <path d="M11 13.5v-2.5M16 12v-3.5M21 13.5v-2.5" className="stroke-marigold" strokeWidth="2.4" strokeLinecap="round" />
       </svg>
-      <span className="font-display text-2xl font-extrabold tracking-tight">{name.toLowerCase()}</span>
+      <span className="font-display text-2xl font-extrabold tracking-tight">{name?.toUpperCase()}</span>
     </Link>
   );
 }

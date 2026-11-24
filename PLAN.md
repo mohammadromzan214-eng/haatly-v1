@@ -1,8 +1,8 @@
-# Haatly — Build Plan
+# TOQAEE — Build Plan
 
 ## 1. Storefront foundation — DONE
 Next.js App Router project, brand system, AI-generated product photography (served from project image URLs), marketplace-shaped domain types (`src/lib/types.ts`), stub catalogue (`src/lib/fixtures.ts`) behind a read layer (`src/lib/catalog.ts`).
-Live: `/`, `/products`, `/products/[slug]`, `/products/category/[category]`, `/cart` (browser-persisted, grouped by seller, coupon HAAT10), `/track-order` (7-step workflow), `/admin/inventory` (source type, status, stock badge, low-stock rules — client-side only).
+Live: `/`, `/products`, `/products/[slug]`, `/products/category/[category]`, `/cart` (browser-persisted, grouped by seller, coupon TOQAEE10), `/track-order` (7-step workflow), `/admin/inventory` (source type, status, stock badge, low-stock rules — client-side only).
 
 ## 2. Database — FOUNDATION IMPLEMENTED
 PostgreSQL schema, migrations, fixture seeds and storage repositories are in place. Tables include sellers (kind platform/partner/marketplace, commission_rate), users (role customer/admin/seller, email or Google identity), addresses, categories, products (seller_id, source_type, status, stock and payment-method choices), wishlists, orders, payments, seller_orders (per-seller sub-orders), order_items, order_events, coupons, banners, content pages and business settings. Admin catalogue/inventory management, customer profiles/addresses/wishlist/orders, payment verification, and public storefront reads use database repositories. Public product, category, seller, banner, coupon, content and business-setting changes are read dynamically so admin updates appear on the next storefront request. Configure `DATABASE_URL`, then run `npm run db:migrate` and `npm run db:seed`. Payouts, withdrawals and commission ledger are not implemented.

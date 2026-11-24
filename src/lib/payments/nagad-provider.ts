@@ -9,7 +9,7 @@ export class NagadProvider implements PaymentProvider {
       status: "pending",
       transactionReference: `MOCK-NAGAD-${randomBytes(8).toString("hex").toUpperCase()}`,
       mode: "mock",
-      message: "Mock Nagad mode: no real payment was processed. Payment remains pending until verified by Haatly.",
+      message: "Mock Nagad mode: no real payment was processed. Payment remains pending until verified by TOQAEE.",
     };
   }
 

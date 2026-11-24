@@ -77,21 +77,21 @@ const initialBanners: AdminBanner[] = [
   { id: "banner_featured", title: "Bestseller feature", placement: "Featured section", image: "/img/earbuds.png", active: true },
 ];
 const initialSettings: AdminSettings = {
-  storeName: "Haatly",
-  phone: "09612-428759",
+  storeName: "TOQAEE",
+  phone: "01623315532",
   whatsapp: "",
   announcement: "",
   bkashNumber: "",
   nagadNumber: "",
-  email: "care@haatly.com.bd",
+  email: "care@toqaee.com.bd",
   facebook: "",
   instagram: "",
   youtube: "",
-  address: "Haatly Fulfilment Centre, Tejgaon I/A, Dhaka",
+  address: "TOQAEE Fulfilment Centre, Tejgaon I/A, Dhaka",
 };
 const initialContent: AdminContent = {
-  about: "Haatly is a Bangladeshi online bazaar bringing together own-stock essentials and curated partner sellers.",
-  contact: "Contact Haatly support by phone or email.",
+  about: "TOQAEE is a Bangladeshi online bazaar bringing together own-stock essentials and curated partner sellers.",
+  contact: "Contact TOQAEE support by phone or email.",
   faq: "Frequently asked questions will be published here.",
   privacy: "Privacy policy content.",
   returns: "Return policy content.",

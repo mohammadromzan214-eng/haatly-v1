@@ -96,7 +96,7 @@ export async function readAdminSnapshot(): Promise<AdminSnapshot> {
       active: row.active,
     })),
     settings: {
-      storeName: typeof settingsValue?.storeName === "string" ? settingsValue.storeName : "Haatly",
+      storeName: typeof settingsValue?.storeName === "string" ? settingsValue.storeName : "TOQAEE",
       phone: typeof settingsValue?.phone === "string" ? settingsValue.phone : "",
       whatsapp: typeof settingsValue?.whatsapp === "string" ? settingsValue.whatsapp : "",
       announcement: typeof settingsValue?.announcement === "string" ? settingsValue.announcement : "",

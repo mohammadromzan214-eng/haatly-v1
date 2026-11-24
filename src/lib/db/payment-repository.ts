@@ -89,7 +89,7 @@ export async function recordPaymentInitiationFailure(paymentId: string) {
       UPDATE payments
       SET status='failed',verification_status='rejected',
         verification_note='The payment provider could not be initialized.',
-        provider_data=${tx.json({ mode: "mock", message: "The payment could not be initiated. Contact Haatly support before trying again." })},
+        provider_data=${tx.json({ mode: "mock", message: "The payment could not be initiated. Contact TOQAEE support before trying again." })},
         updated_at=now()
       WHERE id=${paymentId}
       RETURNING order_code

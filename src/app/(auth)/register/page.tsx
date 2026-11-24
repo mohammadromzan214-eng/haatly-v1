@@ -50,7 +50,7 @@ export default function RegisterPage() {
     <AuthShell
       eyebrow="Join the haat"
       title="Create account"
-      description="A faster checkout and one place for all your Haatly orders."
+      description="A faster checkout and one place for all your TOQAEE orders."
       footer={<><span>Already registered? </span><Link href="/login" className="font-semibold text-clay hover:underline">Sign in</Link></>}
     >
       <form onSubmit={submit} noValidate className="space-y-4">

@@ -1,5 +1,5 @@
 /**
- * Domain types for Haatly.
+ * Domain types for TOQAEE.
  *
  * These mirror the planned database tables (see PLAN.md, milestone 2). They are deliberately
  * marketplace-shaped from day one: every product and order line belongs to a `Seller`, and the
@@ -37,7 +37,7 @@ export interface Seller {
   /** Commission the platform keeps on each sale, in percent. 0 for the platform seller. */
   commissionRate: number;
   rating: number;
-  /** Extra handling days before a parcel reaches the Haatly hub. */
+  /** Extra handling days before a parcel reaches the TOQAEE hub. */
   handoverDays: number;
 }
 

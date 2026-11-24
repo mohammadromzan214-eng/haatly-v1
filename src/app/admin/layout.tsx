@@ -6,7 +6,7 @@ import { AdminDataProvider } from "@/components/admin/AdminDataProvider";
 import { getAdminSessionCookieName } from "@/lib/admin-auth";
 import { getAuthenticatedAdminSession } from "@/lib/admin-access";
 
-export const metadata: Metadata = { title: { default: "Admin", template: "%s · Haatly Admin" }, robots: { index: false } };
+export const metadata: Metadata = { title: { default: "Admin", template: "%s · TOQAEE Admin" }, robots: { index: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();

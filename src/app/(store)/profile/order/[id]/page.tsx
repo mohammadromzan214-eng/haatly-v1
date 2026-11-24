@@ -60,7 +60,7 @@ function OrderDetailView({ order }: { order: OrderDetails }) {
 
       {order.status === "cancelled" && (
         <p role="status" className="mt-5 rounded-2xl bg-clay/10 px-4 py-3 text-sm text-clay">
-          This order was cancelled. Cancellation does not automatically refund a payment; contact Haatly support about any pending or paid payment.
+          This order was cancelled. Cancellation does not automatically refund a payment; contact TOQAEE support about any pending or paid payment.
         </p>
       )}
 
@@ -69,7 +69,7 @@ function OrderDetailView({ order }: { order: OrderDetails }) {
           <section className="rounded-[26px] border border-line bg-paper p-5 md:p-6">
             <div className="flex flex-wrap gap-x-8 gap-y-4 text-sm">
               <p className="flex items-center gap-2 text-ink-soft"><CalendarDays className="size-4 text-clay" />Placed {formatDate(order.placedAt)}</p>
-              <p className="flex items-center gap-2 text-ink-soft"><Truck className="size-4 text-clay" />{order.courier || "Haatly Delivery"}</p>
+              <p className="flex items-center gap-2 text-ink-soft"><Truck className="size-4 text-clay" />{order.courier || "TOQAEE Delivery"}</p>
             </div>
           </section>
 
@@ -83,7 +83,7 @@ function OrderDetailView({ order }: { order: OrderDetails }) {
                     : <span className="grid size-16 shrink-0 place-items-center rounded-xl bg-paper-2 sm:size-20"><Package className="size-6 text-muted" /></span>}
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{line.title}</p>
-                    <p className="mt-1 text-xs text-muted">{line.sellerName ?? "Haatly"} · Qty {line.qty}</p>
+                    <p className="mt-1 text-xs text-muted">{line.sellerName ?? "TOQAEE"} · Qty {line.qty}</p>
                     <p className="mt-1 text-xs text-muted">{formatPrice(line.unitPrice)} each</p>
                   </div>
                   <p className="shrink-0 text-sm font-semibold">{formatPrice(line.unitPrice * line.qty)}</p>

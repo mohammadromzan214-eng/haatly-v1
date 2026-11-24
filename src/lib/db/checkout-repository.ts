@@ -49,7 +49,7 @@ function hashReceiptToken(token: string) {
 
 function orderNumber() {
   const date = new Date().toISOString().slice(2, 10).replace(/-/g, "");
-  return `HTL-${date}-${randomBytes(8).toString("hex").toUpperCase()}`;
+  return `TQL-${date}-${randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
 export async function createCheckoutOrder(input: CreateOrderInput, session: CustomerSession | null) {
@@ -91,7 +91,7 @@ export async function createCheckoutOrder(input: CreateOrderInput, session: Cust
         ? settings.payment_number.replace(/[\s-]/g, "")
         : "";
       if (!/^(?:\+?880|0)1[3-9]\d{8}$/.test(paymentNumber)) {
-        throw new CheckoutError("This payment method is not configured. Please choose Cash on Delivery or contact Haatly support.", 400);
+        throw new CheckoutError("This payment method is not configured. Please choose Cash on Delivery or contact TOQAEE support.", 400);
       }
     }
 
@@ -157,7 +157,7 @@ export async function createCheckoutOrder(input: CreateOrderInput, session: Cust
         notes,subtotal,total,coupon_code,receipt_token_hash,receipt_expires_at,payment_status
       ) VALUES (
         ${code},${customer?.id ?? null},${orderPhone},'pending',now(),${deliveryFee},${discount},
-        ${input.paymentMethod},'Haatly Delivery',${tx.json(shipTo)},${input.deliveryAddress.name},
+        ${input.paymentMethod},'TOQAEE Delivery',${tx.json(shipTo)},${input.deliveryAddress.name},
         ${customer?.email ?? input.customerEmail},${tx.json(deliveryAddressJson)},${tx.json(billingAddressJson)},
         ${input.billingSameAsDelivery},${input.notes},${subtotal},${total},${couponCode},
         ${receiptTokenHash},${receiptExpiresAt},'pending'

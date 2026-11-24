@@ -30,7 +30,7 @@ async function main() {
         await tx`INSERT INTO coupons (id,code,label,percent_off,max_discount,expires_at,active) VALUES (${`coupon_${coupon.code.toLowerCase()}`},${coupon.code},${coupon.label},${coupon.percentOff},${coupon.maxDiscount},${"2026-12-31"},true) ON CONFLICT (code) DO UPDATE SET label=EXCLUDED.label,percent_off=EXCLUDED.percent_off,max_discount=EXCLUDED.max_discount,expires_at=EXCLUDED.expires_at,active=EXCLUDED.active`;
       }
 
-      await tx`INSERT INTO addresses (id,user_id,label,recipient_name,phone,area,city,details,is_default) VALUES ('addr_sample','cus_sample','Home','Haatly Customer','01700000000','Dhanmondi','Dhaka','Road 27, Dhaka',true) ON CONFLICT (id) DO NOTHING`;
+      await tx`INSERT INTO addresses (id,user_id,label,recipient_name,phone,area,city,details,is_default) VALUES ('addr_sample','cus_sample','Home','TOQAEE Customer','01700000000','Dhanmondi','Dhaka','Road 27, Dhaka',true) ON CONFLICT (id) DO NOTHING`;
 
       for (const order of orders) {
         const method = order.paymentMethod.toLowerCase().includes("bkash")

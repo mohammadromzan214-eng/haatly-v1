@@ -1,18 +1,17 @@
 // Brand + locale settings in one place so a rename or currency change is a one-file edit.
 export const site = {
-  name: "Haatly",
-  tagline: "The whole haat, one tap away.",
+  name: "TOQAEE",
+  tagline: "Everything you need, one tap away.",
   description:
-    "Haatly is a Bangladeshi online bazaar — own-stock essentials, curated partner shops and early pre-orders, delivered nationwide.",
+    "TOQAEE is a modern Bangladeshi e-commerce platform offering quality products, trusted sellers, and nationwide delivery.",
   currencySymbol: "৳",
-  supportPhone: "09612-428759",
-  supportEmail: "care@haatly.com.bd",
-  warehouse: "Haatly Fulfilment Centre, Tejgaon I/A, Dhaka",
-  delivery: { insideDhaka: 70, outsideDhaka: 130, freeOver: 4999 },
+  supportPhone: "01623315532",
+  supportEmail: "care@toqaee.com.bd",
+  warehouse: "TOQAEE Fulfilment Centre, Shariatpur, Dhaka, Bangladesh",
+  delivery: { insideDhaka: 70, outsideDhaka: 150, freeOver: 4999 },
 };
 
 export function formatPrice(amount: number) {
-  // Lakh-style grouping (1,25,000) matches how prices are read in Bangladesh.
   return `${site.currencySymbol}${Math.round(amount).toLocaleString("en-IN")}`;
 }
 

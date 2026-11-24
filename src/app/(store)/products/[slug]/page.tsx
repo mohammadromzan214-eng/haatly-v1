@@ -37,7 +37,7 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   const fulfilment =
     badge === "in_stock"
-      ? { icon: Warehouse, title: "Ships from Haatly’s own warehouse", body: `Packed at ${settings.address.split(",")[0] || "our fulfilment centre"} — usually leaves the same day.`, eta: "Delivered in 1–3 days" }
+      ? { icon: Warehouse, title: "Ships from TOQAEE’s own warehouse", body: `Packed at ${settings.address.split(",")[0] || "our fulfilment centre"} — usually leaves the same day.`, eta: "Delivered in 1–3 days" }
       : badge === "partner_shop"
         ? { icon: Handshake, title: `Sourced from ${seller?.name}`, body: `A vetted partner stall in ${seller?.area}, ${seller?.city}. Quality-checked at our hub before dispatch.`, eta: `Delivered in ${2 + (seller?.handoverDays ?? 1)}–${4 + (seller?.handoverDays ?? 1)} days` }
         : { icon: CalendarClock, title: `Pre-order · dispatches from ${product.preorderEta}`, body: "Your unit is reserved the moment you order. We notify you by SMS when it ships.", eta: `Ships ${product.preorderEta}` };

@@ -30,7 +30,7 @@ export default function ProfilePage() {
       <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-4xl font-bold tracking-tight">Welcome, {customer.name}</h1>
-          <p className="mt-2 text-sm text-ink-soft">Your Haatly account at a glance.</p>
+          <p className="mt-2 text-sm text-ink-soft">Your TOQAEE account at a glance.</p>
         </div>
         <Link href="/profile/edit-profile" className="rounded-full border border-line px-4 py-2 text-sm font-semibold hover:border-ink">Edit profile</Link>
       </div>

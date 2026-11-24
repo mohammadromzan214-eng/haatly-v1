@@ -6,7 +6,7 @@
 import type { Category, Order, Product, Seller } from "./types";
 
 export const sellers: Seller[] = [
-  { id: "sel_haatly", slug: "haatly-retail", name: "Haatly Retail", kind: "platform", area: "Tejgaon", city: "Dhaka", commissionRate: 0, rating: 4.8, handoverDays: 0 },
+  { id: "sel_haatly", slug: "toqaee-retail", name: "TOQAEE Retail", kind: "platform", area: "Tejgaon", city: "Dhaka", commissionRate: 0, rating: 4.8, handoverDays: 0 },
   { id: "sel_gadgetghor", slug: "gadget-ghor", name: "Gadget Ghor", kind: "partner", area: "Elephant Road", city: "Dhaka", commissionRate: 8, rating: 4.6, handoverDays: 1 },
   { id: "sel_rupganj", slug: "rupganj-weavers", name: "Rupganj Weavers’ Co-op", kind: "partner", area: "Rupganj", city: "Narayanganj", commissionRate: 12, rating: 4.9, handoverDays: 2 },
   { id: "sel_kantha", slug: "jashore-kantha-collective", name: "Jashore Kantha Collective", kind: "partner", area: "Jhikargachha", city: "Jashore", commissionRate: 12, rating: 4.7, handoverDays: 3 },
@@ -24,7 +24,7 @@ export const categories: Category[] = [
 
 export const products: Product[] = [
   {
-    id: "prd_1001", slug: "sur-pods-anc-wireless-earbuds", sku: "HTL-EL-1001",
+    id: "prd_1001", slug: "sur-pods-anc-wireless-earbuds", sku: "TQL-EL-1001",
     title: "Sur Pods ANC Wireless Earbuds",
     shortDescription: "Active noise cancelling, 32-hour battery with case, low-latency game mode.",
     description: "Built for loud CNG rides and quiet late-night calls. Sur Pods block out traffic with hybrid ANC, switch to transparency with a long press, and charge to two hours of playback in ten minutes over USB-C.",
@@ -32,7 +32,7 @@ export const products: Product[] = [
     price: 3290, compareAtPrice: 4150, stock: 64, lowStockThreshold: 10,
     images: ["/img/earbuds.png"], rating: 4.6, reviewCount: 412, soldCount: 1873,
     highlights: ["Hybrid ANC up to −38 dB", "32 h total battery", "IPX5 sweat resistant", "Bluetooth 5.4 multipoint"],
-    specs: { Driver: "11 mm dynamic", Battery: "8 h buds + 24 h case", Charging: "USB-C, 10 min = 2 h", Warranty: "1 year Haatly warranty" },
+    specs: { Driver: "11 mm dynamic", Battery: "8 h buds + 24 h case", Charging: "USB-C, 10 min = 2 h", Warranty: "1 year TOQAEE warranty"},
     tags: ["bestseller"], createdAt: "2026-09-14",
   },
   {
@@ -60,7 +60,7 @@ export const products: Product[] = [
     tags: ["handmade"], createdAt: "2026-08-02",
   },
   {
-    id: "prd_1004", slug: "hand-braided-leather-sandals", sku: "HTL-FA-1104",
+    id: "prd_1004", slug: "hand-braided-leather-sandals", sku: "TQL-FA-1104",
     title: "Hand-braided Leather Sandals",
     shortDescription: "Vegetable-tanned cowhide, braided toe strap, cushioned footbed.",
     description: "Cut and braided in Hazaribagh from vegetable-tanned leather that darkens beautifully with wear. A soft latex footbed makes them easy for long Friday walks.",
@@ -84,7 +84,7 @@ export const products: Product[] = [
     tags: ["pre-order"], createdAt: "2026-11-08",
   },
   {
-    id: "prd_1006", slug: "sylhet-estate-black-tea-250g", sku: "HTL-GR-0611",
+    id: "prd_1006", slug: "sylhet-estate-black-tea-250g", sku: "TQL-GR-0611",
     title: "Sylhet Estate Black Tea, 250 g",
     shortDescription: "Second-flush orthodox leaf from Srimangal. Malty, bright, made for doodh cha.",
     description: "Whole-leaf orthodox black tea from a single estate near Srimangal, packed in a resealable tin. Strong enough for milk tea, smooth enough to drink plain.",
@@ -96,7 +96,7 @@ export const products: Product[] = [
     tags: ["bestseller"], createdAt: "2026-03-11",
   },
   {
-    id: "prd_1007", slug: "sage-cotton-panjabi", sku: "HTL-FA-1131",
+    id: "prd_1007", slug: "sage-cotton-panjabi", sku: "TQL-FA-1131",
     title: "Sage Cotton Panjabi",
     shortDescription: "Soft-washed cotton, mandarin collar, wooden buttons. Regular fit.",
     description: "A breathable everyday panjabi in muted sage, garment-washed so it is soft from the first wear. Restocking after the Eid rush.",
@@ -120,7 +120,7 @@ export const products: Product[] = [
     tags: [], createdAt: "2026-06-19",
   },
   {
-    id: "prd_1009", slug: "niacinamide-brightening-serum-30ml", sku: "HTL-BE-0207",
+    id: "prd_1009", slug: "niacinamide-brightening-serum-30ml", sku: "TQL-BE-0207",
     title: "Niacinamide 10% Brightening Serum",
     shortDescription: "Lightweight, non-sticky serum for humid weather. 30 ml.",
     description: "A water-light serum with 10% niacinamide and 1% zinc to calm oil and even out tone, formulated to sit comfortably under sunscreen in Dhaka humidity.",
@@ -132,7 +132,7 @@ export const products: Product[] = [
     tags: ["bestseller"], createdAt: "2026-05-27",
   },
   {
-    id: "prd_1010", slug: "commuter-canvas-backpack-24l", sku: "HTL-BT-0355",
+    id: "prd_1010", slug: "commuter-canvas-backpack-24l", sku: "TQL-BT-0355",
     title: "Commuter Canvas Backpack, 24 L",
     shortDescription: "Waxed canvas, padded 15.6\" laptop sleeve, leather trims.",
     description: "Water-resistant waxed canvas with a padded laptop sleeve and a hidden back pocket for your phone on crowded buses.",
@@ -168,7 +168,7 @@ export const products: Product[] = [
     tags: ["handmade"], createdAt: "2026-07-05",
   },
   {
-    id: "prd_1013", slug: "volt-20000mah-power-bank", sku: "HTL-EL-1019",
+    id: "prd_1013", slug: "volt-20000mah-power-bank", sku: "TQL-EL-1019",
     title: "Volt 20,000 mAh Power Bank",
     shortDescription: "22.5 W fast charge, two USB-C ports, aluminium shell. Load-shedding ready.",
     description: "Enough to charge a phone four times through an evening of load-shedding. Ships with a braided USB-C cable.",
@@ -176,11 +176,11 @@ export const products: Product[] = [
     price: 2650, compareAtPrice: 2990, stock: 88, lowStockThreshold: 15,
     images: ["/img/power-bank.png"], rating: 4.7, reviewCount: 689, soldCount: 4120,
     highlights: ["20,000 mAh", "22.5 W fast charging", "2× USB-C + 1× USB-A", "Braided cable included"],
-    specs: { Capacity: "20,000 mAh", Output: "22.5 W max", Weight: "380 g", Warranty: "1 year Haatly warranty" },
+    specs: { Capacity: "20,000 mAh", Output: "22.5 W max", Weight: "380 g", Warranty: "1 year TOQAEE warranty" },
     tags: ["bestseller"], createdAt: "2026-02-18",
   },
   {
-    id: "prd_1014", slug: "volt-mini-10000mah-power-bank", sku: "HTL-EL-1020",
+    id: "prd_1014", slug: "volt-mini-10000mah-power-bank", sku: "TQL-EL-1020",
     title: "Volt Mini 10,000 mAh Power Bank",
     shortDescription: "Pocket-size sibling of the Volt 20K. Listing in preparation.",
     description: "Draft listing — photography and pricing being finalised.",
@@ -192,12 +192,12 @@ export const products: Product[] = [
 ];
 
 export const coupons = [
-  { code: "HAAT10", label: "10% off your first order", percentOff: 10, maxDiscount: 500 },
+  { code: "TOQAEE10", label: "10% off your first order", percentOff: 10, maxDiscount: 500 },
 ];
 
 export const orders: Order[] = [
   {
-    code: "HTL-24117", phone: "01711-482093", status: "shipped", placedAt: "2026-11-17T10:42:00+06:00",
+    code: "TQL-24117", phone: "01711-482093", status: "shipped", placedAt: "2026-11-17T10:42:00+06:00",
     lines: [
       { productId: "prd_1001", sellerId: "sel_haatly", title: "Sur Pods ANC Wireless Earbuds", image: "/img/earbuds.png", qty: 1, unitPrice: 3290 },
       { productId: "prd_1006", sellerId: "sel_haatly", title: "Sylhet Estate Black Tea, 250 g", image: "/img/sylhet-tea.png", qty: 2, unitPrice: 465 },
@@ -213,7 +213,7 @@ export const orders: Order[] = [
     ],
   },
   {
-    code: "HTL-23988", phone: "01819-360412", status: "delivered", placedAt: "2026-11-09T21:16:00+06:00",
+    code: "TQL-23988", phone: "01819-360412", status: "delivered", placedAt: "2026-11-09T21:16:00+06:00",
     lines: [
       { productId: "prd_1003", sellerId: "sel_rupganj", title: "Dhakai Jamdani Saree — Indigo Butidar", image: "/img/jamdani-saree.png", qty: 1, unitPrice: 12600 },
     ],
@@ -223,14 +223,14 @@ export const orders: Order[] = [
       { status: "pending", at: "2026-11-09T21:16:00+06:00", note: "Order placed" },
       { status: "confirmed", at: "2026-11-09T21:18:00+06:00", note: "Card payment captured" },
       { status: "processing", at: "2026-11-10T10:20:00+06:00", note: "Rupganj Weavers’ Co-op preparing item" },
-      { status: "packed", at: "2026-11-11T13:02:00+06:00", note: "Quality-checked at Haatly hub" },
+      { status: "packed", at: "2026-11-11T13:02:00+06:00", note: "Quality-checked at TOQAEE hub" },
       { status: "shipped", at: "2026-11-11T17:40:00+06:00", note: "Dispatched with RedX" },
       { status: "out_for_delivery", at: "2026-11-12T09:15:00+06:00", note: "Rider Kamrul is on the way" },
       { status: "delivered", at: "2026-11-12T12:31:00+06:00", note: "Received by customer" },
     ],
   },
   {
-    code: "HTL-24302", phone: "01552-907718", status: "processing", placedAt: "2026-11-20T08:03:00+06:00",
+    code: "TQL-24302", phone: "01552-907718", status: "processing", placedAt: "2026-11-20T08:03:00+06:00",
     lines: [
       { productId: "prd_1012", sellerId: "sel_kantha", title: "Nakshi Kantha Cushion Cover, 16\"", image: "/img/kantha-cushion.png", qty: 2, unitPrice: 890 },
       { productId: "prd_1009", sellerId: "sel_haatly", title: "Niacinamide 10% Brightening Serum", image: "/img/serum.png", qty: 1, unitPrice: 1150 },

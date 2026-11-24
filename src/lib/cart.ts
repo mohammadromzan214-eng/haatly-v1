@@ -10,7 +10,7 @@ export function toCartItem(p: Product, seller: Product["seller"] = p.seller): Om
     image: p.images[0] ?? "/placeholder.png",
     price: p.price,
     sellerId: p.sellerId,
-    sellerName: seller?.name ?? p.seller?.name ?? "Haatly Retail",
+    sellerName: seller?.name ?? p.seller?.name ?? "TOQAEE Retail",
     badge: stockBadge(p),
     preorderEta: p.preorderEta,
     maxQty: Math.max(0, Math.min(p.stock, 10)),

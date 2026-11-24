@@ -68,7 +68,7 @@ function StoreHeaderContent({ categories, settings }: { categories: Category[]; 
         <button className="lg:hidden" onClick={() => setOpen((v) => !v)} aria-label="Menu" aria-expanded={open}>
           {open ? <X className="size-6" /> : <Menu className="size-6" />}
         </button>
-        <Logo name={settings.storeName} />
+        <Logo name={settings.storeName?.toUpperCase()} />
 
         <nav className="hidden items-center gap-1.5 text-sm font-medium lg:flex">
           {NAV.map((n) => {
@@ -140,7 +140,7 @@ function StoreHeaderContent({ categories, settings }: { categories: Category[]; 
           <form onSubmit={submit} className="mb-4" role="search">
             <label className="flex items-center gap-2 rounded-full border border-line bg-paper-2/60 px-4 py-3">
               <Search className="size-4 text-muted" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search Haatly" className="w-full bg-transparent text-sm outline-none" />
+             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search TOQAEE" className="w-full bg-transparent text-sm outline-none" />
             </label>
           </form>
           <nav className="grid gap-1">

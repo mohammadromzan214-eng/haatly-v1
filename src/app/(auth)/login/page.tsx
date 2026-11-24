@@ -61,7 +61,7 @@ function LoginForm() {
       eyebrow="Welcome back"
       title="Sign in"
       description="Track orders, manage addresses and keep your wishlist close."
-      footer={<><span>New to Haatly? </span><Link href={registerHref} className="font-semibold text-clay hover:underline">Create an account</Link></>}
+      footer={<><span>New to TOQAEE? </span><Link href={registerHref} className="font-semibold text-clay hover:underline">Create an account</Link></>}
     >
       <form onSubmit={submit} noValidate className="space-y-5">
         <AuthField id="login-email" label="Email" type="email" autoComplete="email" value={email} error={errors.email} onChange={(event) => setEmail(event.target.value)} />

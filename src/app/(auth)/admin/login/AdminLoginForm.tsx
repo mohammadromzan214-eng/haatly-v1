@@ -52,7 +52,7 @@ function AdminLoginFields() {
         <div className="grid size-12 place-items-center rounded-2xl bg-forest text-paper">
           <ShieldCheck className="size-6" />
         </div>
-        <p className="mt-6 font-mono text-xs uppercase tracking-[0.25em] text-clay">Haatly administration</p>
+        <p className="mt-6 font-mono text-xs uppercase tracking-[0.25em] text-clay">TOQAEE administration</p>
         <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">Admin sign in</h1>
         <p className="mt-3 text-sm text-ink-soft">This area is restricted to authorized administrators.</p>
 

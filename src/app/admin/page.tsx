@@ -48,7 +48,7 @@ export default async function AdminDashboardPage() {
       <header className="border-b border-line px-5 py-8 md:px-10">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-clay">Overview</p>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="mt-2 text-sm text-muted">A live snapshot of Haatly orders, sales, catalogue, and customers.</p>
+        <p className="mt-2 text-sm text-muted">A live snapshot of TOQAEE orders, sales, catalogue, and customers.</p>
       </header>
 
       <section className="grid gap-4 px-5 py-6 sm:grid-cols-2 xl:grid-cols-5 md:px-10">

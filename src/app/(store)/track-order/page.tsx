@@ -33,7 +33,7 @@ export default async function TrackOrderPage({ searchParams }: { searchParams: S
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-xs font-semibold uppercase tracking-widest text-paper/60">Order number</span>
-              <input name="code" defaultValue={code} required placeholder="HTL-24117" className="mt-2 w-full rounded-2xl bg-paper/10 px-4 py-3.5 font-mono uppercase outline-none ring-marigold placeholder:text-paper/35 focus:ring-2" />
+              <input name="code" defaultValue={code} required placeholder="TOQ-24117" className="mt-2 w-full rounded-2xl bg-paper/10 px-4 py-3.5 font-mono uppercase outline-none ring-marigold placeholder:text-paper/35 focus:ring-2" />
             </label>
             <label className="block">
               <span className="text-xs font-semibold uppercase tracking-widest text-paper/60">Phone number</span>
@@ -51,7 +51,7 @@ export default async function TrackOrderPage({ searchParams }: { searchParams: S
           <CircleAlert className="mt-0.5 size-6 shrink-0 text-clay" />
           <div>
             <p className="font-semibold">We couldn’t find an order matching those details.</p>
-            <p className="mt-1 text-sm text-ink-soft">Double-check the order number (it starts with HTL-) and use the phone number from checkout.</p>
+            <p className="mt-1 text-sm text-ink-soft">Double-check the order number (it starts with TOQ-) and use the phone number from checkout.</p>
           </div>
         </div>
       )}
@@ -81,7 +81,7 @@ function OrderResult({ order, sellerNames }: { order: Order; sellerNames: Map<st
 
         {order.status === "cancelled" && (
           <p role="status" className="mt-5 rounded-2xl bg-clay/10 px-4 py-3 text-sm text-clay">
-            This order was cancelled. Cancellation does not automatically refund a payment; contact Haatly support about any pending or paid payment.
+            This order was cancelled. Cancellation does not automatically refund a payment; contact TOQAEE support about any pending or paid payment.
           </p>
         )}
 
@@ -146,7 +146,7 @@ function OrderResult({ order, sellerNames }: { order: Order; sellerNames: Map<st
                 <img src={cdn(l.image, 120, 120)} alt="" className="size-14 rounded-xl object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{l.title}</p>
-                  <p className="text-xs text-muted">{sellerNames.get(l.sellerId) ?? "Haatly Retail"} · Qty {l.qty}</p>
+                  <p className="text-xs text-muted">{sellerNames.get(l.sellerId) ?? "TOQAEE Retail"} · Qty {l.qty}</p>
                 </div>
                 <p className="text-sm font-semibold">{formatPrice(l.qty * l.unitPrice)}</p>
               </li>

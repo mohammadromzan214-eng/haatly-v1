@@ -1,4 +1,4 @@
-# Haatly
+# TOQAEE
 
 A Bangladeshi multi-page e-commerce platform built with Next.js (App Router), React 19, Tailwind CSS v4, and PostgreSQL-backed management storage. It runs on any hosting provider that supports a Node.js server; no Netlify runtime or image service is required. Customer email auth and Google OIDC are available; admin sign-in requires deployment-configured credentials and a signing secret. Designed to grow from a single-vendor store into a multi-vendor marketplace.
 

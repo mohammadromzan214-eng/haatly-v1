@@ -104,7 +104,7 @@ export function CatalogBrowser({ products, categories, fixedCategory, initial }:
               onClick={() => setSource(s)}
               className={`rounded-full px-3 py-1.5 text-sm transition lg:rounded-lg ${source === s ? "bg-ink text-paper" : "hover:bg-paper-2"}`}
             >
-              {s === "all" ? "All sources" : s === "own_stock" ? "In Stock (Haatly)" : SOURCE_TYPE_LABEL[s]}
+              {s === "all" ? "All sources" : s === "own_stock" ? "In Stock (TOQAEE)" : SOURCE_TYPE_LABEL[s]}
             </button>
           ))}
         </div>

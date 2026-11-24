@@ -163,7 +163,7 @@ export function CartView({ coupons }: { coupons: AdminCoupon[] }) {
                   id="coupon"
                   value={code}
                   onChange={(e) => { setCode(e.target.value); setCodeError(""); }}
-                  placeholder="Try HAAT10"
+                  placeholder="Try TOQAEE10"
                   className="w-full bg-transparent py-2.5 font-mono text-sm uppercase outline-none placeholder:normal-case placeholder:text-paper/40"
                   aria-invalid={!!codeError}
                   aria-describedby={codeError ? "coupon-error" : undefined}

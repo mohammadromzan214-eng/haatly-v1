@@ -19,7 +19,7 @@ export async function registerOrLoginGoogleCustomer(input: { subject: string; na
       FOR UPDATE
     `;
     if (googleUser) {
-      if (!googleUser.is_active) throw new Error("This Haatly account is disabled.");
+      if (!googleUser.is_active) throw new Error("This TOQAEE account is disabled.");
       return userFromRow(googleUser);
     }
 
@@ -30,9 +30,9 @@ export async function registerOrLoginGoogleCustomer(input: { subject: string; na
     `;
     if (emailUser) {
       if (emailUser.role !== "customer" || (emailUser.google_sub && emailUser.google_sub !== input.subject)) {
-        throw new Error("This Google account cannot be linked to the existing Haatly account.");
+        throw new Error("This Google account cannot be linked to the existing TOQAEE account.");
       }
-      if (!emailUser.is_active) throw new Error("This Haatly account is disabled.");
+      if (!emailUser.is_active) throw new Error("This TOQAEE account is disabled.");
       const [linkedUser] = await tx`
         UPDATE users
         SET google_sub=${input.subject},auth_provider='google',name=${input.name.trim() || emailUser.name},updated_at=now()

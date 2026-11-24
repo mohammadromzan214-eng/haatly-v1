@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error(`Could not initiate ${paymentMethod} payment for order ${result.code}.`, error);
         paymentStatus = "failed";
-        paymentMessage = "The order was created, but the payment could not be initiated. Contact Haatly support before trying again.";
+        paymentMessage = "The order was created, but the payment could not be initiated. Contact TOQAEE support before trying again.";
       }
     }
 

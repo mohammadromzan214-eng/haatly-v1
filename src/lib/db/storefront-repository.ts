@@ -168,7 +168,7 @@ export async function getBusinessSettings(): Promise<AdminSettings> {
   const [row] = await getDb()`SELECT value FROM business_settings WHERE key='store'`;
   const value = row?.value as Partial<AdminSettings> | undefined;
   return {
-    storeName: value?.storeName ?? "Haatly",
+    storeName: value?.storeName ?? "TOQAEE",
     phone: value?.phone ?? "",
     whatsapp: value?.whatsapp ?? "",
     announcement: value?.announcement ?? "",

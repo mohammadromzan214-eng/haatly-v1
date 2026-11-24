@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
     <AuthShell
       eyebrow="Account recovery"
       title="Forgot password?"
-      description="Enter the email address associated with your Haatly account to receive a secure reset link."
+      description="Enter the email address associated with your TOQAEE account to receive a secure reset link."
       footer={<Link href="/login" className="font-semibold text-clay hover:underline">Back to sign in</Link>}
     >
       {sent ? (
